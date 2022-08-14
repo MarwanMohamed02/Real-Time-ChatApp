@@ -21,12 +21,14 @@ io.on("connection", (socket) => {
     // Greeting new user only
     socket.emit("message", "Welcome User!");
     // Sending a new message to everyone
-    socket.on("sendMessage", (message) => {
+    socket.on("sendMessage", (message, ack) => {
         io.emit("message", message);
+        ack("Message sent!");
     });
     // Sending location to everyone
-    socket.on("sendLocation", ({ latitude, longitude }) => {
+    socket.on("sendLocation", ({ latitude, longitude }, ack) => {
         io.emit("message", `User has shared his location: https://google.com/maps?q=${latitude},${longitude}`);
+        ack("Location was shared successfully!");
     });
     // Alerting users that someone has left
     socket.on("disconnect", () => {

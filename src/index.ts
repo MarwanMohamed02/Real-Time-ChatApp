@@ -2,7 +2,6 @@ import express from "express"
 import http from "http"
 import path from "path";
 import { Server } from "socket.io";
-import { Socket } from "socket.io-client";
 
 const app = express();
 const server = http.createServer(app);
@@ -28,13 +27,15 @@ io.on("connection", (socket) => {
     socket.emit("message", "Welcome User!");
 
     // Sending a new message to everyone
-    socket.on("sendMessage", (message: string) => {
+    socket.on("sendMessage", (message: string, ack) => {
         io.emit("message", message);
+        ack("Message sent!");
     })
 
     // Sending location to everyone
-    socket.on("sendLocation", ({ latitude, longitude }) => {
-        io.emit("message", `User has shared his location: https://google.com/maps?q=${latitude},${longitude}`)
+    socket.on("sendLocation", ({ latitude, longitude }, ack) => {
+        io.emit("message", `User has shared his location: https://google.com/maps?q=${latitude},${longitude}`);
+        ack("Location was shared successfully!")
     })
 
     // Alerting users that someone has left

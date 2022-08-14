@@ -16,7 +16,9 @@ form.addEventListener("submit", (event) => {
 
     const message = document.querySelector("#message") as HTMLInputElement
 
-    socket.emit("sendMessage", message.value);
+    socket.emit("sendMessage", message.value, (msg: string) => {
+        console.log(msg)
+    });
 
     message.value = "";
 })
@@ -32,6 +34,8 @@ sendLocationButton.onclick = () => {
 
     navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        socket.emit("sendLocation",{latitude, longitude});
+        socket.emit("sendLocation", { latitude, longitude }, (msg: string) => {
+            console.log(msg)
+        });
     })
 }
