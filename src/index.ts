@@ -21,16 +21,25 @@ app.use(express.static(clientDir));
 
 io.on("connection", (socket) => {
 
-    socket.broadcast.emit("sendMessage", "A new user has entered")
+    // Alerting other users that a new user has entered
+    socket.broadcast.emit("message", "A new user has entered")
     
-    socket.emit("sendMessage", "Welcome User!");
+    // Greeting new user only
+    socket.emit("message", "Welcome User!");
 
+    // Sending a new message to everyone
     socket.on("sendMessage", (message: string) => {
-        io.emit("sendMessage", message);
+        io.emit("message", message);
     })
 
+    // Sending location to everyone
+    socket.on("sendLocation", ({ latitude, longitude }) => {
+        io.emit("message", `User has shared his location: https://google.com/maps?q=${latitude},${longitude}`)
+    })
+
+    // Alerting users that someone has left
     socket.on("disconnect", () => {
-        io.emit("sendMessage", "A user has left :(")
+        io.emit("message", "A user has left :(")
     })
 })
 
