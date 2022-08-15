@@ -3,19 +3,36 @@
 <html>
 
     <head>
+        <script defer src="client_side/chat.js"></script>
     </head>
     
     <body>
+        Chat App
 
+        <div id="feed"></div>
+        
         <form>
             <input id="message" placeholder="Enter a message..."></input>
-    
-            <button id="send">Send</button>
+            
+            <button id="sendMessage">Send</button>
         </form>
-
+        
         <button id="sendLocation">Send Location</button>
         
-        <script src="client_side/chat.js"></script>
+        
+        <script id="message-template" type="text/html">
+            <div>
+                <p>{{msg}}</p>
+            </div>
+        </script>
+
+        <script id="location-message-template" type="text/html">
+            <div>
+                <p><a href="{{url}}" target="_blank">My Location</a></p>
+            </div>
+        </script>
+
+        
     </body>
 
 </html>

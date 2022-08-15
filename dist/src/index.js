@@ -32,7 +32,7 @@ io.on("connection", (socket) => {
     });
     // Sending location to everyone
     socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-        io.emit("message", `User has shared his location: https://google.com/maps?q=${latitude},${longitude}`);
+        io.emit("sendLocationMessage", `https://google.com/maps?q=${latitude},${longitude}`);
         ack("Location was shared successfully!");
     });
     // Alerting users that someone has left
