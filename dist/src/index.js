@@ -8,6 +8,7 @@ const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const socket_io_1 = require("socket.io");
 const bad_words_1 = __importDefault(require("bad-words"));
+const messages_1 = require("./utils/messages");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
@@ -18,26 +19,26 @@ const clientDir = path_1.default.join(__dirname, "../../dist/public");
 app.use(express_1.default.static(clientDir));
 io.on("connection", (socket) => {
     // Alerting other users that a new user has entered
-    socket.broadcast.emit("message", "A new user has entered");
+    socket.broadcast.emit("message", (0, messages_1.genMessage)("A new user has entered"));
     // Greeting new user only
-    socket.emit("message", "Welcome User!");
+    socket.emit("message", (0, messages_1.genMessage)("Welcome User!"));
     // Sending a new message to everyone
     socket.on("sendMessage", (msg, ack) => {
         const filter = new bad_words_1.default();
         if (filter.isProfane(msg)) {
             return ack("Profanity is not allowed");
         }
-        io.emit("message", msg);
+        io.emit("message", (0, messages_1.genMessage)(msg));
         ack("Message sent!");
     });
     // Sending location to everyone
     socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-        io.emit("sendLocationMessage", `https://google.com/maps?q=${latitude},${longitude}`);
+        io.emit("sendLocationMessage", (0, messages_1.genMessage)(`https://google.com/maps?q=${latitude},${longitude}`));
         ack("Location was shared successfully!");
     });
     // Alerting users that someone has left
     socket.on("disconnect", () => {
-        io.emit("message", "A user has left :(");
+        io.emit("message", (0, messages_1.genMessage)("A user has left :("));
     });
 });
 server.listen(port, () => console.log(`Server up on port ${port}`));

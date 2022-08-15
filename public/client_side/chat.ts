@@ -1,5 +1,6 @@
 import { io } from "socket.io-client"
 import mustache from "mustache"
+import { genMessage, Message } from "../../src/utils/messages"
 
 const socket = io("http://localhost:3000");
 
@@ -24,14 +25,13 @@ const locationMessageTemplate = document.querySelector("#location-message-templa
 /* Server Listeners */
 
 // Sending a message
-socket.on("message", (msg: string) => {
-    let updatedHTML = mustache.render(messageTemplate, { msg });
+socket.on("message", (message: Message) => {
+    let updatedHTML = mustache.render(messageTemplate, message);
     feed.insertAdjacentHTML("beforeend",updatedHTML);
 })
 
-socket.on("sendLocationMessage", (url: string) => {
-    console.log(url);
-    let updatedHTML = mustache.render(locationMessageTemplate, { url });
+socket.on("sendLocationMessage", (url: Message) => {
+    let updatedHTML = mustache.render(locationMessageTemplate, url);
     feed.insertAdjacentHTML("beforeend", updatedHTML);
 })
 
@@ -70,7 +70,7 @@ sendLocationButton.onclick = function () {
 
     navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        socket.emit("sendLocation", { latitude, longitude }, (msg: string) => {
+        socket.emit("sendLocation", {latitude, longitude}, (msg: string) => {
             sendLocationButton.removeAttribute("disabled");
             console.log(msg)
         });

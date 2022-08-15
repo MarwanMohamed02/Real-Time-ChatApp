@@ -3,6 +3,7 @@ import http from "http"
 import path from "path";
 import { Server } from "socket.io";
 import Filter from "bad-words"
+import { genMessage } from "./utils/messages";
 
 const app = express();
 const server = http.createServer(app);
@@ -22,10 +23,10 @@ app.use(express.static(clientDir));
 io.on("connection", (socket) => {
 
     // Alerting other users that a new user has entered
-    socket.broadcast.emit("message", "A new user has entered")
+    socket.broadcast.emit("message", genMessage("A new user has entered"))
     
     // Greeting new user only
-    socket.emit("message", "Welcome User!");
+    socket.emit("message", genMessage("Welcome User!"));
 
     // Sending a new message to everyone
     socket.on("sendMessage", (msg: string, ack) => {
@@ -35,19 +36,19 @@ io.on("connection", (socket) => {
             return ack("Profanity is not allowed");
         }
 
-        io.emit("message", msg);
+        io.emit("message", genMessage(msg));
         ack("Message sent!");
     })
 
     // Sending location to everyone
     socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-        io.emit("sendLocationMessage", `https://google.com/maps?q=${latitude},${longitude}`);
+        io.emit("sendLocationMessage", genMessage(`https://google.com/maps?q=${latitude},${longitude}`));
         ack("Location was shared successfully!")
     })
 
     // Alerting users that someone has left
     socket.on("disconnect", () => {
-        io.emit("message", "A user has left :(")
+        io.emit("message", genMessage("A user has left :("))
     })
 })
 
