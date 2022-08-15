@@ -2,6 +2,7 @@ import express from "express"
 import http from "http"
 import path from "path";
 import { Server } from "socket.io";
+import Filter from "bad-words"
 
 const app = express();
 const server = http.createServer(app);
@@ -27,8 +28,14 @@ io.on("connection", (socket) => {
     socket.emit("message", "Welcome User!");
 
     // Sending a new message to everyone
-    socket.on("sendMessage", (message: string, ack) => {
-        io.emit("message", message);
+    socket.on("sendMessage", (msg: string, ack) => {
+        const filter = new Filter();
+
+        if (filter.isProfane(msg)) {
+            return ack("Profanity is not allowed");
+        }
+
+        io.emit("message", msg);
         ack("Message sent!");
     })
 

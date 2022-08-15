@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const socket_io_1 = require("socket.io");
+const bad_words_1 = __importDefault(require("bad-words"));
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
@@ -21,8 +22,12 @@ io.on("connection", (socket) => {
     // Greeting new user only
     socket.emit("message", "Welcome User!");
     // Sending a new message to everyone
-    socket.on("sendMessage", (message, ack) => {
-        io.emit("message", message);
+    socket.on("sendMessage", (msg, ack) => {
+        const filter = new bad_words_1.default();
+        if (filter.isProfane(msg)) {
+            return ack("Profanity is not allowed");
+        }
+        io.emit("message", msg);
         ack("Message sent!");
     });
     // Sending location to everyone
