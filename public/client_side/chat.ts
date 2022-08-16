@@ -1,6 +1,7 @@
 import { io } from "socket.io-client"
 import mustache from "mustache"
-import { genMessage, Message } from "../../src/utils/messages"
+import Qs from "query-string"
+import { Message } from "../../src/utils/messages"
 
 const socket = io("http://localhost:3000");
 
@@ -22,6 +23,8 @@ const messageTemplate = document.querySelector("#message-template")?.innerHTML a
 const locationMessageTemplate = document.querySelector("#location-message-template")?.innerHTML as string
 
 
+const { username, room } = Qs.parse(location.search);
+
 /* Server Listeners */
 
 // Sending a message
@@ -37,6 +40,9 @@ socket.on("sendLocationMessage", (url: Message) => {
 
 
 /* DOM Listeners*/
+
+// Sending username & room to server
+socket.emit("joinData", { username, room });
 
 // Reading and sending a message from the user
 form.addEventListener("submit", (event) => {
