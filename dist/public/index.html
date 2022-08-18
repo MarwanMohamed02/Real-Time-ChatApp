@@ -6,7 +6,7 @@
     <title> Chat App</title>
     <link rel="icon" href="/img/favicon.png">
     <link rel="stylesheet" href="/css/styles.min.css">
-   
+    <script defer src="client_side/index.js"></script>
 </head>
 
 <body>
@@ -14,16 +14,20 @@
     <div class="centered-form">
 
         <div class="centered-form__box">
-            <h1>Join</h1>
+            
 
-            <form action="/chat.html">
-                <label>Display Name</label>
-                <input type="text" name="username" placeholder="Enter name..." required>
+            <form id="join-form">
+                <label>User Name</label>
+                <input type="text" id="username" name="username" placeholder="Enter name..." required>
                 <label>Room</label>
-                <input type="text" name="room" placeholder="Enter room..." required>
+                <input type="text" id="room" name="room" placeholder="Enter room..." required>
                 <button>Join</button>
             </form>
 
+            
+            <form action="/signUp.html">
+                <button>Sign Up</button>
+            </form>
         </div>
 
     </div>
