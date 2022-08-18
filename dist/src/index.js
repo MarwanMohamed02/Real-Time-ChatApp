@@ -8,6 +8,8 @@ const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const socket_io_1 = require("socket.io");
 const bad_words_1 = __importDefault(require("bad-words"));
+require("./db/mongoose");
+const userModel_1 = require("./db/models/userModel");
 const messages_1 = require("./utils/messages");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
@@ -18,7 +20,15 @@ const clientDir = path_1.default.join(__dirname, "../../dist/public");
 // app.use(express.static(publicDir));
 app.use(express_1.default.static(clientDir));
 io.on("connection", (socket) => {
-    socket.on("joinData", ({ username, room }) => {
+    socket.on("login", async ({ username, room }) => {
+        const sameUsername = await userModel_1.User.findOne({ username });
+        if (!sameUsername || room !== "myRoom") {
+            socket.emit("notFound");
+        }
+        else
+            socket.emit("found");
+    });
+    socket.on("joinData", async ({ username, room }) => {
         socket.join(room);
         // Alerting other users that a new user has entered
         socket.broadcast.to(room).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`));

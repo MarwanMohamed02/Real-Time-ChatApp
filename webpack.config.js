@@ -1,9 +1,14 @@
 const path = require("path")
 
 module.exports = {
-    entry: "./public/client_side/chat.ts",
+    entry: {
+        
+        index: "./public/client_side/index.ts",
+        chat: "./public/client_side/chat.ts",
+        signUp: "./public/client_side/signUp.ts",
+    },
     output: {
-        filename: "chat.js",
+        filename: "[name].js",
         path: path.join(__dirname, "dist/public/client_side")
     },
     module: {

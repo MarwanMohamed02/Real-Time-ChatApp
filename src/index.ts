@@ -3,6 +3,9 @@ import http from "http"
 import path from "path";
 import { Server } from "socket.io";
 import Filter from "bad-words"
+require("./db/mongoose")
+import { User, IUser } from "./db/models/userModel";
+
 import { genMessage } from "./utils/messages";
 
 const app = express();
@@ -23,7 +26,18 @@ app.use(express.static(clientDir));
 
 io.on("connection", (socket) => {
 
-    socket.on("joinData", ({username, room}) => {
+    
+    socket.on("login", async ({ username, room }) => {
+        const sameUsername = await User.findOne({ username });
+        if (!sameUsername || room !== "myRoom") {
+            socket.emit("notFound");
+        }
+        else
+            socket.emit("found");
+    });
+    
+    socket.on("joinData", async ({ username, room }) => {
+        
         socket.join(room);
 
         // Alerting other users that a new user has entered
