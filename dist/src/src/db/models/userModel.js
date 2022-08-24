@@ -9,8 +9,10 @@ const UserSchema = new mongoose_1.Schema({
         trim: true,
         lowercase: true,
     },
-    currentRoom: {
-        type: mongoose_1.Schema.Types.ObjectId
+    room: {
+        type: String,
+        required: true,
+        trim: true,
     }
 });
 const User = (0, mongoose_1.model)("User", UserSchema);

@@ -13,6 +13,10 @@
 
     <div class="chat">
         <div class="chat__sidebar">
+            <input id="room-name" placeholder="Enter a room to join..."></input>
+            <button id="join-room-button">Join a room</button>
+            <input placeholder="Enter a name for your room..."></input>
+            <button id="create-room-button">+ Create a room</button>
 
         </div>
 
@@ -42,7 +46,7 @@
                     <span class="message__name">Username</span>
                     <span class="message__meta">{{createdAt}}</span>
                 </p>
-                <p>{{msg}}</p>
+                <p>{{text}}</p>
             </div>
         </script>
 
@@ -55,7 +59,7 @@
                 </p>
             </div>
 
-            <p><a href="{{msg}}" target="_blank">My Location</a></p>
+            <p><a href="{{text}}" target="_blank">My Location</a></p>
            
         </script>
 

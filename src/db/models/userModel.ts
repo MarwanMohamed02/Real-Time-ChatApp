@@ -3,7 +3,7 @@ import { Schema, Document, Model, model } from "mongoose"
 // to validate the user in the code
 interface IUser {
     username: string, 
-    room: string,
+    currentRoom?: Schema.Types.ObjectId,
 
 }
 
@@ -22,14 +22,11 @@ const UserSchema = new Schema<UserDocument, UserModel>({
     username: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         lowercase: true,
     },
-    room: {
-        type: String,
-        required: true,
-        trim: true,
+    currentRoom: {
+        type: Schema.Types.ObjectId
     }
 
 })
@@ -37,4 +34,5 @@ const UserSchema = new Schema<UserDocument, UserModel>({
 
 const User = model<UserDocument, UserModel>("User", UserSchema);
 
-export { User, IUser}
+
+export { User, IUser }

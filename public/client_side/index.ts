@@ -15,7 +15,7 @@ const room = joinForm.querySelector("#room") as HTMLInputElement;
     
 joinForm.onsubmit =  async (event) => {
     event.preventDefault();
-    socket.emit("login", { username: userName.value, room: room.value });
+    socket.emit("login", { username: userName.value });
     joinButton.setAttribute("disabled", "disabled");
     
    

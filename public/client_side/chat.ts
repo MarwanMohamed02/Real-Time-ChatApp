@@ -9,6 +9,8 @@ const socket = io("http://localhost:3000");
 /* Fetching Elements */
 
 const feed = document.querySelector("#feed") as HTMLDivElement;
+const joinRoomButton = document.querySelector("#join-room-button") as HTMLButtonElement;
+const roomName = document.querySelector("#room-name") as HTMLInputElement;
 
 // Message Form Elements
 const form = document.querySelector("form") as HTMLFormElement;
@@ -23,7 +25,10 @@ const messageTemplate = document.querySelector("#message-template")?.innerHTML a
 const locationMessageTemplate = document.querySelector("#location-message-template")?.innerHTML as string
 
 
-const { username, room } = Qs.parse(location.search);
+const { username } = Qs.parse(location.search);
+sendMessageButton.disabled = true;
+sendLocationButton.disabled = true;
+
 
 /* Server Listeners */
 
@@ -33,16 +38,36 @@ socket.on("message", (message: Message) => {
     feed.insertAdjacentHTML("beforeend",updatedHTML);
 })
 
+// Sending a location message
 socket.on("sendLocationMessage", (url: Message) => {
     let updatedHTML = mustache.render(locationMessageTemplate, url);
     feed.insertAdjacentHTML("beforeend", updatedHTML);
 })
 
+socket.on("userJoined", (messages: Message[]) => {
+    for (let i = 0; i < messages.length; i++) {
+        const { text, createdAt } = messages[i];
+        const template = text.includes("https://google.com/maps") ? locationMessageTemplate : messageTemplate;
+        let updatedHTML =  mustache.render(template, { text, createdAt });
+        feed.insertAdjacentHTML("beforeend", updatedHTML);
+    }
+    sendMessageButton.disabled = false;
+    sendLocationButton.disabled = false;
+})
+
 
 /* DOM Listeners*/
 
+joinRoomButton.onclick = () => {
+    const room = roomName.value;
+    if (room.length !== 0) {
+        socket.emit("joinRoom", {roomName: room, username});
+    }
+}
+
+
 // Sending username & room to server
-socket.emit("joinData", { username, room });
+//socket.emit("joinData", { username, room });
 
 // Reading and sending a message from the user
 form.addEventListener("submit", (event) => {
@@ -50,12 +75,12 @@ form.addEventListener("submit", (event) => {
 
     
     // disabling the button to prevent multiple sends
-    sendMessageButton.setAttribute("disabled", "disabled");
+    sendMessageButton.disabled = true;
 
     // sending message to the users
     socket.emit("sendMessage", message.value, (msg: string) => {
         console.log(msg);
-        sendMessageButton.removeAttribute("disabled");
+        sendMessageButton.disabled = false;
     });
 
     // resetting after sending message
@@ -67,17 +92,17 @@ form.addEventListener("submit", (event) => {
 // Sending location
 sendLocationButton.onclick = function () {
     
-    sendLocationButton.setAttribute("disabled", "disabled");
+    sendLocationButton.disabled = true;
     
     if (!navigator.geolocation) {
-        sendLocationButton.removeAttribute("disabled");
+        sendLocationButton.disabled = false;
         return alert("Geolocation is not supported by your browser");
     }
 
     navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
         socket.emit("sendLocation", {latitude, longitude}, (msg: string) => {
-            sendLocationButton.removeAttribute("disabled");
+            sendLocationButton.disabled = false;
             console.log(msg)
         });
     })

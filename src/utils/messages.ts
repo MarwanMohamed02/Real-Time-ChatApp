@@ -1,14 +1,14 @@
 import moment from "moment"
 
 interface Message {
-    msg: string,
+    text: string,
     createdAt: string
 }
 
 
-function genMessage(msg: string): Message {
+function genMessage(text: string): Message {
     return {
-        msg,
+        text,
         createdAt: moment(new Date().getTime()).format("h:mm  a")
     }
 }
