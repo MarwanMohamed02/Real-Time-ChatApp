@@ -18,54 +18,83 @@ const io = new socket_io_1.Server(server);
 const port = process.env.PORT || 3000;
 // const publicDir = path.join(__dirname, '../../public');
 const clientDir = path_1.default.join(__dirname, "../../dist/public");
+let user;
+// Middleware
+io.use(async (socket, next) => {
+    console.log("Middleware");
+    const token = socket.handshake.auth.token;
+    if (token === null)
+        next(new Error("Authorization needed!"));
+    else if (token === "hello")
+        next();
+    user = await userModel_1.User.findOne({ token });
+    next();
+});
 // app.use(express.static(publicDir));
 app.use(express_1.default.static(clientDir));
 io.on("connection", (socket) => {
     socket.on("login", async ({ username }) => {
-        const sameUsername = await userModel_1.User.findOne({ username });
-        if (!sameUsername) {
-            socket.emit("notFound");
+        const user = await userModel_1.User.findOne({ username });
+        if (!user) {
+            return socket.emit("notFound");
         }
-        else
-            socket.emit("found");
+        else if (user.token !== undefined) {
+            return socket.emit("already_logged_in");
+        }
+        const token = await user.genToken();
+        socket.emit("found", token);
     });
-    socket.on("joinRoom", async ({ roomName, username }) => {
-        const room = await roomModel_1.Room.findOne({ name: roomName });
-        if (!room) {
-            return console.log("room not found");
+    socket.on("in_lobby", async () => {
+        if (user?.currentRoom) {
+            const room = await roomModel_1.Room.findOne({ _id: user?.currentRoom });
+            console.log(room.name);
+            socket.emit("userReturned", room.name);
         }
-        socket.join(roomName);
-        room.addMessage((0, messages_1.genMessage)("Hellooo"));
-        socket.emit("userJoined", room.messages);
-        // Sending a new message to everyone
-        socket.on("sendMessage", (msg, ack) => {
-            const filter = new bad_words_1.default();
-            if (filter.isProfane(msg)) {
-                return ack("Profanity is not allowed");
+        socket.on("joinRoom", async ({ roomName, username }) => {
+            const room = await roomModel_1.Room.findOne({ name: roomName });
+            if (!room) {
+                return console.log("room not found");
             }
-            const message = (0, messages_1.genMessage)(msg);
-            room.addMessage(message);
-            io.to(roomName).emit("message", message);
-            ack("Message sent!");
+            socket.join(roomName);
+            socket.emit("loadMessages", room.messages);
+            // Sending a new message to everyone
+            socket.on("sendMessage", (msg, ack) => {
+                const filter = new bad_words_1.default();
+                if (filter.isProfane(msg)) {
+                    return ack("Profanity is not allowed");
+                }
+                const message = (0, messages_1.genMessage)(msg, username);
+                room.addMessage(message);
+                io.to(roomName).emit("message", message);
+                ack("Message sent!");
+            });
+            socket.broadcast.to(roomName).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`, "Admin"));
+            // Greeting new user only
+            socket.emit("message", (0, messages_1.genMessage)("Welcome User!", "Admin"));
+            // Alerting users that someone has left
+            socket.on("disconnect", () => {
+                io.to(roomName).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`, "Admin"));
+            });
+            // Sending location to everyone
+            socket.on("sendLocation", ({ latitude, longitude }, ack) => {
+                const locationMessage = (0, messages_1.genMessage)(`https://google.com/maps?q=${latitude},${longitude}`, username);
+                io.to(roomName).emit("sendLocationMessage", locationMessage);
+                room.addMessage(locationMessage);
+                ack("Location was shared successfully!");
+            });
         });
-        socket.broadcast.to(roomName).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`));
-        // Greeting new user only
-        socket.emit("message", (0, messages_1.genMessage)("Welcome User!"));
-        // Alerting users that someone has left
-        socket.on("disconnect", () => {
-            io.to(roomName).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`));
+        // Logout
+        socket.on("logout", async (token) => {
+            const user = await userModel_1.User.findOne({ token });
+            if (user) {
+                await user.logOut();
+                socket.emit("loggedOut");
+            }
         });
-        // Sending location to everyone
-        socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-            const locationMessage = (0, messages_1.genMessage)(`https://google.com/maps?q=${latitude},${longitude}`);
-            io.to(roomName).emit("sendLocationMessage", locationMessage);
-            room.addMessage(locationMessage);
-            ack("Location was shared successfully!");
-        });
-    });
-    socket.on("joinData", async ({ username, room }) => {
-        socket.join(room); // gives us access to send messsages to sepcific rooms  => .to(room)
-        // Alerting other users that a new user has entered
+        // Diconnect
+        //     socket.on("disconnect", async () => {
+        //         console.log("left lobby");
+        //     })
     });
 });
 server.listen(port, () => console.log(`Server up on port ${port}`));

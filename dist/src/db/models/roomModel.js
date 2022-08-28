@@ -10,6 +10,10 @@ const RoomSchema = new mongoose_1.Schema({
     },
     messages: [{
             type: {
+                author: {
+                    type: String,
+                    required: true
+                },
                 text: {
                     type: String,
                     required: true,

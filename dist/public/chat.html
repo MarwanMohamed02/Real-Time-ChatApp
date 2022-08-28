@@ -27,7 +27,7 @@
             <div class="compose">
 
                 <form>
-                    <input id="message" placeholder="Enter a message..."></input>
+                    <input id="message" placeholder="Enter a message..." autocomplete="off"></input>
 
                     <button id="sendMessage">Send</button>
                 </form>
@@ -36,6 +36,13 @@
             </div>
 
         </div>
+
+        <div class="chat__sidebar">
+            
+            <button id="logout-button">Logout</button>
+            <button id="leave-room-button">Leave Room</button>
+        
+        </div>
     </div>
 
 
@@ -43,7 +50,7 @@
     <script id="message-template" type="text/html">
             <div class="message">
                 <p>
-                    <span class="message__name">Username</span>
+                    <span class="message__name">{{author}}</span>
                     <span class="message__meta">{{createdAt}}</span>
                 </p>
                 <p>{{text}}</p>
@@ -54,7 +61,7 @@
 
             <div class="message">
                 <p>
-                    <span class="message__name">Username</span>
+                    <span class="message__name">{{author}}</span>
                     <span class="message__meta">{{createdAt}}</span>
                 </p>
             </div>

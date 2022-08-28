@@ -5,7 +5,7 @@ module.exports = {
         
         index: "./public/client_side/index.ts",
         chat: "./public/client_side/chat.ts",
-        signUp: "./public/client_side/signUp.ts",
+        createAccount: "./public/client_side/createAccount.ts",
     },
     output: {
         filename: "[name].js",

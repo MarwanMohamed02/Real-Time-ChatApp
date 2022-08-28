@@ -28,6 +28,10 @@ const RoomSchema = new Schema<RoomDocument, RoomModel>({
     },
     messages: [{
         type: {
+            author: {
+                type: String,
+                required: true
+            },
             text: {
                 type: String,
                 required: true,
@@ -62,7 +66,7 @@ const Room = model<RoomDocument, RoomModel>("Room", RoomSchema);
 
 
 
-export { IRoom, Room }
+export { IRoom, Room, RoomDocument }
 
 // const name = "bedroom";
 
