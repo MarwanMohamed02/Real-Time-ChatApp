@@ -11,7 +11,6 @@ const UserSchema = new mongoose_1.Schema({
         type: String,
         required: true,
         trim: true,
-        lowercase: true,
     },
     currentRoom: {
         type: mongoose_1.Schema.Types.ObjectId,

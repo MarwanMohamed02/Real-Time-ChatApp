@@ -2,11 +2,12 @@ import express from "express"
 import http from "http"
 import path from "path";
 import { Server } from "socket.io";
-import Filter from "bad-words"
+import { ExtendedError } from "socket.io/dist/namespace";
 require("./db/mongoose")
-import { User, IUser, UserDocument } from "./db/models/userModel";
-import { genMessage, Message } from "./utils/messages"
-import { Room, RoomDocument } from "./db/models/roomModel";
+import { User, UserDocument } from "./db/models/userModel"
+import { userLoginHandler } from "./eventHandlers/userLogin"
+import { userInLobbyHandler } from "./eventHandlers/user_in_lobby";
+import { authUser } from "./middleware/authUser";
 
 
 
@@ -28,15 +29,13 @@ let user: UserDocument | undefined | null;
 
 // Middleware
 io.use(async (socket, next) => {
-    console.log("Middleware");
-    const token = socket.handshake.auth.token; 
-    if (token === null)
-        next(new Error("Authorization needed!"));
-    else if (token === "hello")
+    try {
+        user = await authUser(socket, user);
         next();
-    
-    user = await User.findOne({ token });
-    next()
+    }
+    catch (err: any) {
+        next(err);
+    }
 })
 
 // app.use(express.static(publicDir));
@@ -46,100 +45,9 @@ app.use(express.static(clientDir));
 io.on("connection", (socket) => {
 
     
-    socket.on("login", async ({ username }) => {
-        const user = await User.findOne({ username }) as UserDocument;
-        
-        if (!user) {
-            return socket.emit("notFound");
-        }
-        else if (user.token !== undefined) {
-            return socket.emit("already_logged_in")
-        }
-        
-        const token = await user.genToken();
+    userLoginHandler(io, socket);
 
-        socket.emit("found", token);           
-    });
-
-    socket.on("in_lobby", async () => {
-
-        if (user?.currentRoom) {
-            const room = await Room.findOne({ _id: user?.currentRoom }) as RoomDocument;
-            console.log(room.name);
-            socket.emit("userReturned", room.name);
-        }        
-
-        socket.on("joinRoom", async ({roomName, username}) => {
-    
-            const room = await Room.findOne({ name: roomName })
-    
-            if (!room) {
-                return console.log("room not found");
-            }
-    
-            socket.join(roomName);
-    
-    
-            socket.emit("loadMessages", room.messages);
-    
-            // Sending a new message to everyone
-            socket.on("sendMessage", (msg: string, ack) => {
-                const filter = new Filter();
-    
-                if (filter.isProfane(msg)) {
-                    return ack("Profanity is not allowed");
-                }
-    
-                const message = genMessage(msg, username)
-                room.addMessage(message);
-    
-                io.to(roomName).emit("message", message);
-                ack("Message sent!");
-            })
-    
-            socket.broadcast.to(roomName).emit("message", genMessage(`${username} has joined the room!`, "Admin"));
-    
-            // Greeting new user only
-            socket.emit("message", genMessage("Welcome User!", "Admin"));
-    
-            // Alerting users that someone has left
-            socket.on("disconnect", () => {
-                
-                io.to(roomName).emit("message", genMessage(`${username} has left the room :(`, "Admin"))
-            })
-    
-    
-    
-            // Sending location to everyone
-            socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-                const locationMessage = genMessage(`https://google.com/maps?q=${latitude},${longitude}`, username);
-                io.to(roomName).emit("sendLocationMessage", locationMessage);
-                room.addMessage(locationMessage);
-                ack("Location was shared successfully!")
-            })
-    
-        })
-
-    
-        // Logout
-        socket.on("logout", async (token) => {
-            const user = await User.findOne({ token }) as UserDocument;
-            
-            if (user) {
-                await user.logOut();
-        
-                socket.emit("loggedOut");
-            }
-        })
-
-
-        // Diconnect
-    //     socket.on("disconnect", async () => {
-    //         console.log("left lobby");
-    //     })
-    })
-
-    
+    userInLobbyHandler(io, socket, user);   
     
 })
 

@@ -7,7 +7,7 @@ interface Message {
 }
 
 
-function genMessage(text: string, author: string): Message {
+function genMessage(text: string, author: string = "Admin"): Message {
     return {
         author,
         text,

@@ -2,6 +2,7 @@ import { io } from "socket.io-client"
 import mustache from "mustache"
 import Qs from "query-string"
 import { Message } from "../../src/utils/messages"
+import { IUser } from "../../src/db/models/userModel"
 
 const { username } = Qs.parse(location.search);
 
@@ -16,11 +17,16 @@ const socket = io("http://localhost:3000", {
 socket.emit("in_lobby");
 
 
+
 /* Fetching Elements */
 
 const feed = document.querySelector("#feed") as HTMLDivElement;
+
+// Left Sidebar Elements
 const joinRoomButton = document.querySelector("#join-room-button") as HTMLButtonElement;
 const roomName = document.querySelector("#room-name") as HTMLInputElement;
+
+const usersList = document.getElementById("users-list") as HTMLDivElement
 
 // Message Form Elements
 const form = document.querySelector("form") as HTMLFormElement;
@@ -35,9 +41,10 @@ const logoutButton = document.querySelector("#logout-button") as HTMLButtonEleme
 const leaveRoomButton = document.querySelector("#leave-room-button") as HTMLButtonElement;
 
 // Mustache templates
+const adminMessageTemplate = document.getElementById("admin-message-template")?.innerHTML as string
 const messageTemplate = document.querySelector("#message-template")?.innerHTML as string;
-const locationMessageTemplate = document.querySelector("#location-message-template")?.innerHTML as string
-
+const locationMessageTemplate = document.querySelector("#location-message-template")?.innerHTML as string;
+const roomatesListTemplate = document.getElementById("roomates-list-template")?.innerHTML as string;
 
 sendMessageButton.disabled = true;
 sendLocationButton.disabled = true;
@@ -47,7 +54,8 @@ sendLocationButton.disabled = true;
 
 // Sending a message
 socket.on("message", (message: Message) => {
-    let updatedHTML = mustache.render(messageTemplate, message);
+    const template = message.author === "Admin" ? adminMessageTemplate : messageTemplate;
+    let updatedHTML = mustache.render(template, message);
     feed.insertAdjacentHTML("beforeend",updatedHTML);
 })
 
@@ -73,25 +81,55 @@ socket.on("userReturned", (roomName: string) => {
     socket.emit("joinRoom", { roomName, username });
 })
 
+socket.on("showRoomers", (users: IUser[]) => {
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].token === token) {
+            users[i].username = "You";
+            let temp = users[0];
+            users[0] = users[i];
+            users[i] = temp;
+        }
+    }
+    const updatedHTML = mustache.render(roomatesListTemplate, { users });
+    usersList.innerHTML = updatedHTML;
+})
+
 socket.on("loggedOut", () => {
-    document.location.pathname = "/index.html";
+    document.location.href = "./"
     sessionStorage.removeItem(`${username}_token`);
 })
 
+
 socket.on("connect_error", (err) => {
-    alert(err.message)
+    alert(err.message);
+    document.location.href = "./"
 })
 
 /* DOM Listeners*/
 
 joinRoomButton.onclick = () => {
-    const room = roomName.value;
-    roomName.value = "";
-
-    if (room.length !== 0) {
-        socket.emit("joinRoom", {roomName: room, username});
+    if (sessionStorage.getItem("room") !== roomName.value) {
+        if (roomName.value.length !== 0) {
+            const room = roomName.value;
+            sessionStorage.setItem("room", room);
+            roomName.value = "";
+        
+            socket.emit("joinRoom", { roomName: room, username });
+        }
     }
+    else {
+        roomName.value = "";
+        roomName.placeholder = "You are already in this room";
+    }
+}
 
+leaveRoomButton.onclick = () => {
+    sessionStorage.removeItem("room")
+    usersList.innerHTML = ""
+    feed.innerHTML = "";
+    sendMessageButton.disabled = true;
+    sendLocationButton.disabled = true;
+    socket.emit("leaveRoom");
 }
 
 

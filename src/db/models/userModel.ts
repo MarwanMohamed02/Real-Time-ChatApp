@@ -25,7 +25,6 @@ const UserSchema = new Schema<UserDocument, UserModel>({
         type: String,
         required: true,
         trim: true,
-        lowercase: true,
     },
     currentRoom: {
         type: Schema.Types.ObjectId,
