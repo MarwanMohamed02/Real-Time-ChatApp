@@ -8,7 +8,7 @@ const messages_1 = require("../utils/messages");
 const bad_words_1 = __importDefault(require("bad-words"));
 function messagesHandler(io, socket, room, username) {
     socket.emit("loadMessages", room.messages);
-    socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`, "Admin"));
+    socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`));
     // Greeting new user only
     socket.emit("message", (0, messages_1.genMessage)("Welcome User!", "Admin"));
     // Sending a new message to everyone

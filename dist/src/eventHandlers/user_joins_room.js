@@ -26,7 +26,7 @@ function joinRoomHandler(io, socket, user) {
                 await user.save();
             }
             socket.leave(room.name);
-            socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`, "Admin"));
+            socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`));
             await room.populate("users");
             io.to(room.name).emit("showRoomers", room.toObject().users);
         });

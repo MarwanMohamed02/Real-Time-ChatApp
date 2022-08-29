@@ -9,7 +9,7 @@ export  function messagesHandler(io: Server, socket: Socket, room: RoomDocument,
 
     socket.emit("loadMessages", room.messages);
 
-    socket.broadcast.to(room.name).emit("message", genMessage(`${username} has joined the room!`, "Admin"));
+    socket.broadcast.to(room.name).emit("message", genMessage(`${username} has joined the room!`));
 
     // Greeting new user only
     socket.emit("message", genMessage("Welcome User!", "Admin"));
