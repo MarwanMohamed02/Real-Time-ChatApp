@@ -8,6 +8,7 @@ const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const socket_io_1 = require("socket.io");
 require("./db/mongoose");
+const createUserHandler_1 = require("./eventHandlers/createUserHandler");
 const userLogin_1 = require("./eventHandlers/userLogin");
 const user_in_lobby_1 = require("./eventHandlers/user_in_lobby");
 const authUser_1 = require("./middleware/authUser");
@@ -32,20 +33,24 @@ io.use(async (socket, next) => {
 app.use(express_1.default.static(clientDir));
 io.on("connection", (socket) => {
     (0, userLogin_1.userLoginHandler)(io, socket);
+    (0, createUserHandler_1.createUserHandler)(io, socket);
     (0, user_in_lobby_1.userInLobbyHandler)(io, socket, user);
 });
 server.listen(port, () => console.log(`Server up on port ${port}`));
 // async function test() {
 //     const name = "bedroom";
 //     const msg1: Message = {
+//         author: "Me",
 //         text: "text1",
 //         createdAt: "date1",
 //     }
 //     const msg2: Message = {
+//         author: "Me",
 //         text: "text2",
 //         createdAt: "date2",
 //     }
 //     const msg3: Message = {
+//         author: "Me",
 //         text: "text3",
 //         createdAt: "date3",
 //     }

@@ -3,11 +3,14 @@ import http from "http"
 import path from "path";
 import { Server } from "socket.io";
 import { ExtendedError } from "socket.io/dist/namespace";
+import { Room } from "./db/models/roomModel";
 require("./db/mongoose")
 import { User, UserDocument } from "./db/models/userModel"
+import { createUserHandler } from "./eventHandlers/createUserHandler";
 import { userLoginHandler } from "./eventHandlers/userLogin"
 import { userInLobbyHandler } from "./eventHandlers/user_in_lobby";
 import { authUser } from "./middleware/authUser";
+import { Message } from "./utils/messages";
 
 
 
@@ -47,13 +50,19 @@ io.on("connection", (socket) => {
     
     userLoginHandler(io, socket);
 
-    userInLobbyHandler(io, socket, user);   
+    createUserHandler(io, socket);
+
+    userInLobbyHandler(io, socket, user as UserDocument);   
     
 })
 
 
 
 server.listen(port, () => console.log(`Server up on port ${port}`));
+
+
+
+
 
 
 // async function test() {
@@ -63,16 +72,19 @@ server.listen(port, () => console.log(`Server up on port ${port}`));
    
     
 //     const msg1: Message = {
+//         author: "Me",
 //         text: "text1",
 //         createdAt: "date1",
 //     }
     
 //     const msg2: Message = {
+//         author: "Me",
 //         text: "text2",
 //         createdAt: "date2",
 //     }
     
 //     const msg3: Message = {
+//         author: "Me",
 //         text: "text3",
 //         createdAt: "date3",
 //     }
@@ -82,6 +94,7 @@ server.listen(port, () => console.log(`Server up on port ${port}`));
 //     const room = new Room({ name, messages });
 
 //     await room.save();
+
     
 //     const user = await User.findOne({ username: "marwano" });
 //     if (user) {

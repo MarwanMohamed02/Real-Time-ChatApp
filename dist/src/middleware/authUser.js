@@ -7,7 +7,6 @@ exports.authUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const userModel_1 = require("../db/models/userModel");
 async function authUser(socket, user) {
-    console.log("Middleware");
     const token = socket.handshake.auth.token;
     if (token === undefined) {
         throw new Error("Authorization needed!");

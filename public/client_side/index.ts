@@ -22,8 +22,9 @@ joinForm.onsubmit =  async (event) => {
     joinButton.setAttribute("disabled", "disabled"); 
 }
 
-socket.on("found", (token) => {
+socket.on("found", ({ token, username }) => {
     sessionStorage.setItem("token", token);
+    sessionStorage.setItem("username", username);
     joinForm.action = "./chat.html";
     joinForm.submit();
 })

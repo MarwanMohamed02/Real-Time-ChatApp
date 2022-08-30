@@ -1,21 +1,25 @@
 import { Server, Socket } from "socket.io";
 import { Room, RoomDocument } from "../db/models/roomModel";
 import { UserDocument } from "../db/models/userModel";
-import { joinRoomHandler } from "./user_joins_room";
+import { createRoomHandler } from "./createRoomHandler";
+import { joinRoomHandler } from "./joinRoomHandler";
 
 
 
-export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocument | undefined | null) {
+export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocument) {
 
-    socket.on("in_lobby", async () => {
+    socket.on("user_in_lobby", async () => {
 
-        if (user?.currentRoom) {
-            const room = await Room.findOne({ _id: user?.currentRoom }) as RoomDocument;
-            console.log(room.name);
-            socket.emit("userReturned", room.name);
+        if (user.currentRoom) {
+            const room = await Room.findOne({ _id: user.currentRoom }) as RoomDocument;
+            socket.emit("user_returned", room);
         }
 
         joinRoomHandler(io, socket, user);
+
+        socket.emit("showActiveRooms", await Room.getActiveRooms());
         
+        createRoomHandler(io, socket, user as UserDocument);
     })
+
 }

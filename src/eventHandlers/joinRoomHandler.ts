@@ -1,47 +1,56 @@
 import { Server, Socket } from "socket.io";
-import { Room } from "../db/models/roomModel";
+import { Room, RoomDocument } from "../db/models/roomModel";
 import { User, UserDocument } from "../db/models/userModel";
 import { genMessage } from "../utils/messages";
 import { messagesHandler } from "./messagesHandler";
 import { roomDataHandler } from "./roomDataHandler";
 
 
-export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument | undefined | null) {
+export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) {
 
-    socket.on("joinRoom", async ({ roomName, username }) => {
+    socket.on("joinRoom", async({ roomName, username }) => {
 
-        const room = await Room.findOne({ name: roomName })
+        let room = await Room.findOne({ name: roomName }) as RoomDocument;
 
         if (!room) {
-            return console.log("room not found");
+            return socket.emit("room_not_found");
         }
-
-        if (user) {
-            user.currentRoom = room._id;
-            await user.save();
+            
+        
+        if (!user.currentRoom || !(user.currentRoom?.toString() === room._id.toString())) {
+            socket.broadcast.to(room.name).emit("message", genMessage(`${username} has joined the room!`));
         }
         
+        user.currentRoom = room._id;
+        await user.save();
+        
         socket.join(room.name);
+        
+        socket.emit("user_joined_room", room.name);
 
-
+        
         messagesHandler(io, socket, room, username);
 
 
         roomDataHandler(io, socket, room);
-        
 
+        
         // Alerting users that someone has left
         socket.on("leaveRoom", async () => {
             if (user) {
                 user.currentRoom = undefined
                 await user.save();
             }
+
             socket.leave(room.name);
-            socket.broadcast.to(room.name).emit("message", genMessage(`${username} has left the room :(`));
+            io.to(room.name).emit("message", genMessage(`${username} has left the room :(`));
+
             await room.populate("users");
+
             io.to(room.name).emit("showRoomers", room.toObject().users);
         })
     })
+
 
 
     // Logout

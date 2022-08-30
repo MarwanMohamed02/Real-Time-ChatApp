@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { RoomDocument } from "../db/models/roomModel";
+import { Room, RoomDocument } from "../db/models/roomModel";
 
 
 
@@ -7,5 +7,4 @@ export async function roomDataHandler(io: Server, socket: Socket, room: RoomDocu
     await room.populate("users");
 
     io.to(room.name).emit("showRoomers", room.toObject().users);
-
 }

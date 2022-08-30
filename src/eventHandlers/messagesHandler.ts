@@ -1,31 +1,37 @@
 import { Server, Socket } from "socket.io";
-import { RoomDocument } from "../db/models/roomModel";
+import { Room, RoomDocument } from "../db/models/roomModel";
 import { genMessage } from "../utils/messages";
 import Filter from "bad-words"
 
 
 
-export  function messagesHandler(io: Server, socket: Socket, room: RoomDocument, username: string) {
+export async function messagesHandler(io: Server, socket: Socket, room: RoomDocument, username: string) {
 
     socket.emit("loadMessages", room.messages);
 
-    socket.broadcast.to(room.name).emit("message", genMessage(`${username} has joined the room!`));
+    socket.emit("showActiveRooms", await Room.getActiveRooms());
 
+   
     // Greeting new user only
-    socket.emit("message", genMessage("Welcome User!", "Admin"));
+    socket.emit("message", genMessage("Welcome User!"));
 
 
     // Sending a new message to everyone
-    socket.on("sendMessage", (msg: string, ack) => {
+    socket.on("sendMessage", async (msg: string, ack) => {
         const filter = new Filter();
 
         if (filter.isProfane(msg)) {
             return ack("Profanity is not allowed");
         }
         
+        console.log(socket.rooms);
+        console.log(`${room.name} sent a message`)
 
-        const message = genMessage(msg, username)
+        const message = genMessage(msg, username);
+        
         room.addMessage(message);
+
+        io.emit("showActiveRooms", await Room.getActiveRooms());
 
         io.to(room.name).emit("message", message);
         ack("Message sent!");

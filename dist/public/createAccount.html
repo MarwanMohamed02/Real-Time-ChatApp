@@ -6,7 +6,7 @@
     <title> Chat App</title>
     <link rel="icon" href="/img/favicon.png">
     <link rel="stylesheet" href="/css/styles.min.css">
-
+    <script defer src="client_side/createAccount.js"></script>
 </head>
 
 <body>
@@ -17,13 +17,13 @@
 
             <h1>Sign Up</h1>
 
-            <form action="/chat.html">
+            <form id="sign-up-form">
                 <label>User Name</label>
-                <input type="text" name="username" placeholder="Enter name..." required>
+                <input type="text" id="username" placeholder="Enter name..." required>
                 <label>Password</label>
-                <input type="text" name="room" placeholder="Enter room..." required>
+                <input type="text" id="password" placeholder="Enter password..." required>
                
-                <button>Create Account</button>
+                <button>Become A Roomer</button>
 
                 <p>Can't wait to have you on board!</p>
             </form>

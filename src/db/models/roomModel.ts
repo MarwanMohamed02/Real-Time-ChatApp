@@ -16,7 +16,7 @@ interface RoomDocument extends IRoom, Document {
 
 // model for static functions
 interface RoomModel extends Model<RoomDocument> {
-    
+    getActiveRooms(): Promise<IRoom[]>,
 }
 
 
@@ -47,6 +47,7 @@ const RoomSchema = new Schema<RoomDocument, RoomModel>({
     {
         toJSON: { getters: true, virtuals: true },
         toObject: { virtuals: true },
+        timestamps: true,
     }
 )
 
@@ -56,9 +57,18 @@ RoomSchema.virtual("users", {
     foreignField: "currentRoom"
 })
 
+
+
 RoomSchema.methods.addMessage = async function (this: RoomDocument, message:Message) {
     this.messages?.push(message);
     await this.save();
+}
+
+
+RoomSchema.statics.getActiveRooms = async function (): Promise<IRoom[]> {
+    const rooms = await Room.find({}).sort({updatedAt:-1}).limit(5);
+
+    return rooms;
 }
 
 

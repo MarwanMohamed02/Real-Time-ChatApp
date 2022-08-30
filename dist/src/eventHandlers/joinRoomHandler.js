@@ -8,15 +8,17 @@ const messagesHandler_1 = require("./messagesHandler");
 const roomDataHandler_1 = require("./roomDataHandler");
 function joinRoomHandler(io, socket, user) {
     socket.on("joinRoom", async ({ roomName, username }) => {
-        const room = await roomModel_1.Room.findOne({ name: roomName });
+        let room = await roomModel_1.Room.findOne({ name: roomName });
         if (!room) {
-            return console.log("room not found");
+            return socket.emit("room_not_found");
         }
-        if (user) {
-            user.currentRoom = room._id;
-            await user.save();
+        if (!user.currentRoom || !(user.currentRoom?.toString() === room._id.toString())) {
+            socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`));
         }
+        user.currentRoom = room._id;
+        await user.save();
         socket.join(room.name);
+        socket.emit("user_joined_room", room.name);
         (0, messagesHandler_1.messagesHandler)(io, socket, room, username);
         (0, roomDataHandler_1.roomDataHandler)(io, socket, room);
         // Alerting users that someone has left
@@ -26,7 +28,7 @@ function joinRoomHandler(io, socket, user) {
                 await user.save();
             }
             socket.leave(room.name);
-            socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`));
+            io.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`));
             await room.populate("users");
             io.to(room.name).emit("showRoomers", room.toObject().users);
         });

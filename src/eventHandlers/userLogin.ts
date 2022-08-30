@@ -14,7 +14,7 @@ export function userLoginHandler(io: Server, socket: Socket) {
 
         const token = await user.genToken();
 
-        socket.emit("found", token);
+        socket.emit("found", {token, username});
     });
 
 }

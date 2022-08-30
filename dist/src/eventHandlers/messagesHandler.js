@@ -4,21 +4,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesHandler = void 0;
+const roomModel_1 = require("../db/models/roomModel");
 const messages_1 = require("../utils/messages");
 const bad_words_1 = __importDefault(require("bad-words"));
-function messagesHandler(io, socket, room, username) {
+async function messagesHandler(io, socket, room, username) {
     socket.emit("loadMessages", room.messages);
-    socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`));
+    socket.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());
     // Greeting new user only
-    socket.emit("message", (0, messages_1.genMessage)("Welcome User!", "Admin"));
+    socket.emit("message", (0, messages_1.genMessage)("Welcome User!"));
     // Sending a new message to everyone
-    socket.on("sendMessage", (msg, ack) => {
+    socket.on("sendMessage", async (msg, ack) => {
         const filter = new bad_words_1.default();
         if (filter.isProfane(msg)) {
             return ack("Profanity is not allowed");
         }
+        console.log(socket.rooms);
+        console.log(`${room.name} sent a message`);
         const message = (0, messages_1.genMessage)(msg, username);
         room.addMessage(message);
+        io.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());
         io.to(room.name).emit("message", message);
         ack("Message sent!");
     });

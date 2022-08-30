@@ -12,7 +12,7 @@ function userLoginHandler(io, socket) {
             return socket.emit("already_logged_in");
         }
         const token = await user.genToken();
-        socket.emit("found", token);
+        socket.emit("found", { token, username });
     });
 }
 exports.userLoginHandler = userLoginHandler;

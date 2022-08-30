@@ -27,6 +27,7 @@ const RoomSchema = new mongoose_1.Schema({
 }, {
     toJSON: { getters: true, virtuals: true },
     toObject: { virtuals: true },
+    timestamps: true,
 });
 RoomSchema.virtual("users", {
     ref: "User",
@@ -36,6 +37,10 @@ RoomSchema.virtual("users", {
 RoomSchema.methods.addMessage = async function (message) {
     this.messages?.push(message);
     await this.save();
+};
+RoomSchema.statics.getActiveRooms = async function () {
+    const rooms = await Room.find({}).sort({ updatedAt: -1 }).limit(5);
+    return rooms;
 };
 const Room = (0, mongoose_1.model)("Room", RoomSchema);
 exports.Room = Room;
