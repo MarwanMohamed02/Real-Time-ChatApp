@@ -11,13 +11,23 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
     socket.on("user_in_lobby", async () => {
 
         if (user.currentRoom) {
-            const room = await Room.findOne({ _id: user.currentRoom }) as RoomDocument;
-            socket.emit("user_returned", room);
+            try {
+                const room = await Room.findOne({ _id: user.currentRoom }) as RoomDocument;
+                socket.emit("user_returned", room);
+            }
+            catch (err: any) {
+                socket.emit("db_error");
+            }
         }
 
         joinRoomHandler(io, socket, user);
 
-        socket.emit("showActiveRooms", await Room.getActiveRooms());
+        try {
+            socket.emit("showActiveRooms", await Room.getActiveRooms());
+        }
+        catch (err: any) {
+            socket.emit("db_error");
+        }
         
         createRoomHandler(io, socket, user as UserDocument);
     })

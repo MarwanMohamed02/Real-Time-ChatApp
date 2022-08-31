@@ -2,10 +2,11 @@ import { Server, Socket } from "socket.io";
 import { Room, RoomDocument } from "../db/models/roomModel";
 import { genMessage } from "../utils/messages";
 import Filter from "bad-words"
+import { UserDocument } from "../db/models/userModel";
 
 
 
-export async function messagesHandler(io: Server, socket: Socket, room: RoomDocument, username: string) {
+export async function messagesHandler(io: Server, socket: Socket, room: RoomDocument, user: UserDocument) {
 
     socket.emit("loadMessages", room.messages);
 
@@ -27,7 +28,7 @@ export async function messagesHandler(io: Server, socket: Socket, room: RoomDocu
         console.log(socket.rooms);
         console.log(`${room.name} sent a message`)
 
-        const message = genMessage(msg, username);
+        const message = genMessage(msg, user);
         
         room.addMessage(message);
 
@@ -40,7 +41,7 @@ export async function messagesHandler(io: Server, socket: Socket, room: RoomDocu
 
     // Sending location to everyone
     socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-        const locationMessage = genMessage(`https://google.com/maps?q=${latitude},${longitude}`, username);
+        const locationMessage = genMessage(`https://google.com/maps?q=${latitude},${longitude}`, user);
         io.to(room.name).emit("sendLocationMessage", locationMessage);
         room.addMessage(locationMessage);
         ack("Location was shared successfully!")

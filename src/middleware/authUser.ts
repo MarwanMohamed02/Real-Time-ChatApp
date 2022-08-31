@@ -14,10 +14,15 @@ export async function authUser(socket: Socket, user: UserDocument | null | undef
 
     const _id = jwt.verify(token, "vehyhgehguufju8")
     
-    user = await User.findOne({ _id, token });
+    try {
+        user = await User.findOne({ _id, token });
 
-    if (!user)
-        throw new Error("Authorization needed!");
-    else
-        return user
+        if (!user)
+            throw new Error("Authorization needed!");
+        else
+            return user
+    }
+    catch (err: any) {
+        socket.emit("db_error");
+    }
 }

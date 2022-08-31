@@ -20,7 +20,9 @@
 
         <div class="chat__main">
 
-            <div id="feed" class="chat__messages"></div>
+            <div class="room-name"> <h1>RoomName</h1> </div>
+            <div id="feed" class="chat__messages">
+            </div>
 
             <div class="compose">
 
@@ -74,9 +76,9 @@
 
 
     <script id="message-template" type="text/html">
-            <div class="message">
+            <div class="{{style}}">
                 <p>
-                    <span class="message__name">{{author}}</span>
+                    <span class="message__name">{{name}}</span>
                     <span class="message__meta">{{createdAt}}</span>
                 </p>
                 <p>{{text}}</p>
@@ -85,9 +87,9 @@
 
     <script id="location-message-template" type="text/html">
 
-            <div class="message">
+            <div class="{{style}}">
                 <p>
-                    <span class="message__name">{{author}}</span>
+                    <span class="message__name">{{name}}</span>
                     <span class="message__meta">{{createdAt}}</span>
                 </p>
             </div>

@@ -29,8 +29,12 @@ const RoomSchema = new Schema<RoomDocument, RoomModel>({
     messages: [{
         type: {
             author: {
-                type: String,
-                required: true
+                _id: {
+                    type: String,
+                },
+                name: {
+                    type: String,
+                }
             },
             text: {
                 type: String,

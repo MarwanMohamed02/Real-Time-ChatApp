@@ -22,9 +22,10 @@ joinForm.onsubmit =  async (event) => {
     joinButton.setAttribute("disabled", "disabled"); 
 }
 
-socket.on("found", ({ token, username }) => {
+socket.on("found", ({ token, username, _id }) => {
     sessionStorage.setItem("token", token);
     sessionStorage.setItem("username", username);
+    sessionStorage.setItem("_id", _id);
     joinForm.action = "./chat.html";
     joinForm.submit();
 })
@@ -39,4 +40,10 @@ socket.on("already_logged_in", () => {
     joinButton.disabled = false;
     userName.value = ""
     userName.placeholder = "You are already logged in!"
+})
+
+
+socket.on("db_error", () => {
+    alert("An error from our side, Reloading...");
+    window.location.reload();
 })

@@ -7,7 +7,7 @@ exports.messagesHandler = void 0;
 const roomModel_1 = require("../db/models/roomModel");
 const messages_1 = require("../utils/messages");
 const bad_words_1 = __importDefault(require("bad-words"));
-async function messagesHandler(io, socket, room, username) {
+async function messagesHandler(io, socket, room, user) {
     socket.emit("loadMessages", room.messages);
     socket.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());
     // Greeting new user only
@@ -20,7 +20,7 @@ async function messagesHandler(io, socket, room, username) {
         }
         console.log(socket.rooms);
         console.log(`${room.name} sent a message`);
-        const message = (0, messages_1.genMessage)(msg, username);
+        const message = (0, messages_1.genMessage)(msg, user);
         room.addMessage(message);
         io.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());
         io.to(room.name).emit("message", message);
@@ -28,7 +28,7 @@ async function messagesHandler(io, socket, room, username) {
     });
     // Sending location to everyone
     socket.on("sendLocation", ({ latitude, longitude }, ack) => {
-        const locationMessage = (0, messages_1.genMessage)(`https://google.com/maps?q=${latitude},${longitude}`, username);
+        const locationMessage = (0, messages_1.genMessage)(`https://google.com/maps?q=${latitude},${longitude}`, user);
         io.to(room.name).emit("sendLocationMessage", locationMessage);
         room.addMessage(locationMessage);
         ack("Location was shared successfully!");

@@ -15,8 +15,11 @@ export function createRoomHandler(io: Server, socket: Socket, user: UserDocument
     
             socket.emit("user_created_room", newRoom.name);
         }
-        catch (err) {
-            
+        catch (err: any) {
+            if (err.code === 11000)
+                socket.emit("duplicate_room_error");
+            else
+                socket.emit("db_error");
         }
     })
 }

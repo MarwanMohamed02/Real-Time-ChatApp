@@ -7,11 +7,21 @@ const joinRoomHandler_1 = require("./joinRoomHandler");
 function userInLobbyHandler(io, socket, user) {
     socket.on("user_in_lobby", async () => {
         if (user.currentRoom) {
-            const room = await roomModel_1.Room.findOne({ _id: user.currentRoom });
-            socket.emit("user_returned", room);
+            try {
+                const room = await roomModel_1.Room.findOne({ _id: user.currentRoom });
+                socket.emit("user_returned", room);
+            }
+            catch (err) {
+                socket.emit("db_error");
+            }
         }
         (0, joinRoomHandler_1.joinRoomHandler)(io, socket, user);
-        socket.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());
+        try {
+            socket.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());
+        }
+        catch (err) {
+            socket.emit("db_error");
+        }
         (0, createRoomHandler_1.createRoomHandler)(io, socket, user);
     });
 }

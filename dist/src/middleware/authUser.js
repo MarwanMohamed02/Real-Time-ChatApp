@@ -14,10 +14,15 @@ async function authUser(socket, user) {
     else if (token === "hello")
         return undefined;
     const _id = jsonwebtoken_1.default.verify(token, "vehyhgehguufju8");
-    user = await userModel_1.User.findOne({ _id, token });
-    if (!user)
-        throw new Error("Authorization needed!");
-    else
-        return user;
+    try {
+        user = await userModel_1.User.findOne({ _id, token });
+        if (!user)
+            throw new Error("Authorization needed!");
+        else
+            return user;
+    }
+    catch (err) {
+        socket.emit("db_error");
+    }
 }
 exports.authUser = authUser;

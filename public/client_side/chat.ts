@@ -5,7 +5,7 @@ import { IUser } from "../../src/db/models/userModel"
 import { IRoom, RoomDocument } from "../../src/db/models/roomModel"
 
 
-const { token, username } = sessionStorage;
+const { token, username, _id } = sessionStorage;
 
 const socket = io("http://localhost:3000", {
     auth: {
@@ -42,8 +42,9 @@ const activeRoomsList = document.getElementById("active-rooms-list") as HTMLDivE
 const createRoomButton = document.getElementById("create-room-button") as HTMLButtonElement;
 const newRoomName = document.getElementById("new-room-name") as HTMLInputElement;
 
-const logoutButton = document.querySelector("#logout-button") as HTMLButtonElement;
 const leaveRoomButton = document.querySelector("#leave-room-button") as HTMLButtonElement;
+leaveRoomButton.disabled = true;
+const logoutButton = document.querySelector("#logout-button") as HTMLButtonElement;
 
 // Mustache templates
 const adminMessageTemplate = document.getElementById("admin-message-template")?.innerHTML as string
@@ -60,43 +61,77 @@ sendLocationButton.disabled = true;
 
 // Sending a message
 socket.on("message", (message: Message) => {
-    const template = message.author === "Admin" ? adminMessageTemplate : messageTemplate;
-    let updatedHTML = mustache.render(template, message);
-    feed.insertAdjacentHTML("beforeend",updatedHTML);
+    
+    const { author, text, createdAt } = message;
+    let { name } = author;
+    
+    const template = author.name === "Admin" ? adminMessageTemplate : messageTemplate;
+    const style = author._id === _id ? "current-user-message" : "message";
+    name = style === "current-user-message" ? "You" : name;
+
+
+    let updatedHTML = mustache.render(template, { name, text, createdAt, style });
+    feed.insertAdjacentHTML("beforeend", updatedHTML);
+    
 })
 
 // Sending a location message
 socket.on("sendLocationMessage", (url: Message) => {
-    let updatedHTML = mustache.render(locationMessageTemplate, url);
+
+    const { author, text, createdAt } = url;
+    let { name } = author;
+
+    const style = author._id === _id ? "current-user-message" : "message";
+    name = style === "current-user-message" ? "You" : name;
+
+    let updatedHTML = mustache.render(locationMessageTemplate, { name, text, createdAt, style });
     feed.insertAdjacentHTML("beforeend", updatedHTML);
+
 })
 
 socket.on("loadMessages", (messages: Message[]) => {
+
     for (let i = 0; i < messages.length; i++) {
         const { author, text, createdAt } = messages[i];
+        let { name } = author;
+
         const template = text.includes("https://google.com/maps") ? locationMessageTemplate : messageTemplate;
-        let updatedHTML =  mustache.render(template, { author, text, createdAt });
+            
+        const style = author._id === _id ? "current-user-message" : "message";
+        name = style === "current-user-message" ? "You": name;
+        
+        let updatedHTML =  mustache.render(template, { name, text, createdAt, style });
         feed.insertAdjacentHTML("beforeend", updatedHTML);
     }
+
     sendMessageButton.disabled = false;
     sendLocationButton.disabled = false;
+
 })
 
 socket.on("user_joined_room", (room: string) => {
+    leaveRoomButton.disabled = false;
     feed.innerHTML = "";
     sessionStorage.setItem("room", room);
     message.focus();
 })
 
-socket.on("user_created_room", (newRoomName: string) => {
+socket.on("user_created_room", (new_room_name: string) => {
+    window.location.reload();
+    createRoomButton.disabled = false;
+    leaveRoomButton.disabled = false;
+    newRoomName.value = "";
+    message.focus();
     feed.innerHTML = "";
     const currentRoom = sessionStorage.getItem("room");
-    socket.emit("joinRoom", { roomName: newRoomName, username }, currentRoom);
+    socket.emit("joinRoom", { roomName: new_room_name, username }, currentRoom);
 })
 
 socket.on("user_returned", (room: RoomDocument) => {
+    leaveRoomButton.disabled = false;
     socket.emit("joinRoom", { roomName: room.name, username }, room);
 })
+
 
 socket.on("showRoomers", (users: IUser[]) => {
     if (users.length !== 0) {
@@ -121,14 +156,19 @@ socket.on("showActiveRooms", (activeRooms: IRoom[]) => {
 
 
 socket.on("loggedOut", () => {
-    document.location.href = "./"
-    sessionStorage.removeItem(`${username}_token`);
+    document.location.href = "./";
 })
 
 socket.on("room_not_found", () => {
     
     roomName.value = "";
     roomName.placeholder = "Room not found... try again";
+})
+
+socket.on("duplicate_room_error", () => {
+    newRoomName.value = "";
+    newRoomName.placeholder = "Room already exists...";
+    createRoomButton.disabled = false;
 })
 
 socket.on("connect_error", (err) => {
@@ -163,15 +203,17 @@ leaveRoomButton.onclick = () => {
     feed.innerHTML = "";
     sendMessageButton.disabled = true;
     sendLocationButton.disabled = true;
-    socket.emit("leaveRoom");    
+    socket.emit("leaveRoom");
+    leaveRoomButton.disabled = true;
+   
 }
 
 createRoomButton.onclick = () => {
+    createRoomButton.disabled = true;
     if (sessionStorage.getItem("room"))
         socket.emit("leaveRoom");
     socket.emit("createNewRoom", newRoomName.value);
 }
-
 
 // Sending username & room to server
 //socket.emit("joinData", { username, room });
@@ -215,10 +257,17 @@ sendLocationButton.onclick = function () {
     })
 }
 
+
 // Logout
 logoutButton.onclick = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
+    sessionStorage.removeItem("_id");
     socket.emit("logout", token);
 }
 
+
+socket.on("db_error", () => {
+    alert("An error from our side, Reloading...");
+    window.location.reload();
+})

@@ -4,15 +4,20 @@ exports.userLoginHandler = void 0;
 const userModel_1 = require("../db/models/userModel");
 function userLoginHandler(io, socket) {
     socket.on("login", async ({ username }) => {
-        const user = await userModel_1.User.findOne({ username });
-        if (!user) {
-            return socket.emit("notFound");
+        try {
+            const user = await userModel_1.User.findOne({ username });
+            if (!user) {
+                return socket.emit("notFound");
+            }
+            else if (user.token !== undefined) {
+                return socket.emit("already_logged_in");
+            }
+            const token = await user.genToken();
+            socket.emit("found", { token, username, _id: user._id.toString() });
         }
-        else if (user.token !== undefined) {
-            return socket.emit("already_logged_in");
+        catch (err) {
+            io.emit("db_error");
         }
-        const token = await user.genToken();
-        socket.emit("found", { token, username });
     });
 }
 exports.userLoginHandler = userLoginHandler;

@@ -11,8 +11,12 @@ const RoomSchema = new mongoose_1.Schema({
     messages: [{
             type: {
                 author: {
-                    type: String,
-                    required: true
+                    _id: {
+                        type: String,
+                    },
+                    name: {
+                        type: String,
+                    }
                 },
                 text: {
                     type: String,

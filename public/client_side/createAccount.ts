@@ -21,14 +21,18 @@ signUpForm.onsubmit = (e) => {
 }
 
 
-socket.on("user_created", ({ username, token }) => {
+socket.on("user_created", ({ username, token, _id }) => {
     sessionStorage.setItem("username", username);
     sessionStorage.setItem("token", token);
+    sessionStorage.setItem("_id", _id)
     signUpForm.action = "./chat.html";
     signUpForm.submit();
 })
 
 
-
+socket.on("db_error", () => {
+    alert("An error from our side, Reloading...");
+    window.location.reload();
+})
 
 

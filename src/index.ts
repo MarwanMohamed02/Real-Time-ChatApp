@@ -2,15 +2,12 @@ import express from "express"
 import http from "http"
 import path from "path";
 import { Server } from "socket.io";
-import { ExtendedError } from "socket.io/dist/namespace";
-import { Room } from "./db/models/roomModel";
 require("./db/mongoose")
-import { User, UserDocument } from "./db/models/userModel"
+import { UserDocument } from "./db/models/userModel"
 import { createUserHandler } from "./eventHandlers/createUserHandler";
 import { userLoginHandler } from "./eventHandlers/userLogin"
 import { userInLobbyHandler } from "./eventHandlers/user_in_lobby";
 import { authUser } from "./middleware/authUser";
-import { Message } from "./utils/messages";
 
 
 
@@ -47,12 +44,13 @@ app.use(express.static(clientDir));
 
 io.on("connection", (socket) => {
 
-    
+   
     userLoginHandler(io, socket);
 
     createUserHandler(io, socket);
 
     userInLobbyHandler(io, socket, user as UserDocument);   
+    
     
 })
 
