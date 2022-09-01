@@ -19,10 +19,11 @@ socket.emit("user_in_lobby");
 
 /* Fetching Elements */
 
+// Center Elements
 const feed = document.querySelector("#feed") as HTMLDivElement;
+const currentRoomName = document.getElementById("current-room-name") as HTMLDivElement;
 
 // Left Sidebar Elements
-
 const usersList = document.getElementById("users-list") as HTMLDivElement
 
 // Message Form Elements
@@ -50,6 +51,8 @@ const logoutButton = document.querySelector("#logout-button") as HTMLButtonEleme
 const adminMessageTemplate = document.getElementById("admin-message-template")?.innerHTML as string
 const messageTemplate = document.querySelector("#message-template")?.innerHTML as string;
 const locationMessageTemplate = document.querySelector("#location-message-template")?.innerHTML as string;
+const currentRoomNameTemplate = document.getElementById("current-room-name-template")?.innerHTML as string
+currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: "Lobby" });
 const roomatesListTemplate = document.getElementById("roomates-list-template")?.innerHTML as string;
 const activeRoomsListTemplate = document.getElementById("active-rooms-list-template")?.innerHTML as string;
 
@@ -113,6 +116,9 @@ socket.on("user_joined_room", (room: string) => {
     leaveRoomButton.disabled = false;
     feed.innerHTML = "";
     sessionStorage.setItem("room", room);
+
+    currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: room });
+
     message.focus();
 })
 
@@ -124,11 +130,13 @@ socket.on("user_created_room", (new_room_name: string) => {
     message.focus();
     feed.innerHTML = "";
     const currentRoom = sessionStorage.getItem("room");
+    currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: new_room_name });
     socket.emit("joinRoom", { roomName: new_room_name, username }, currentRoom);
 })
 
 socket.on("user_returned", (room: RoomDocument) => {
     leaveRoomButton.disabled = false;
+    currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: room.name });
     socket.emit("joinRoom", { roomName: room.name, username }, room);
 })
 
@@ -198,7 +206,8 @@ joinRoomButton.onclick = async (e) => {
 
 leaveRoomButton.onclick = () => {
     roomName.placeholder = "Enter a room to join...";
-    sessionStorage.removeItem("room")
+    currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: "Lobby" });
+    sessionStorage.removeItem("room");
     usersList.innerHTML = ""
     feed.innerHTML = "";
     sendMessageButton.disabled = true;

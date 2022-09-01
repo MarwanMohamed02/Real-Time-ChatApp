@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const socket_io_1 = require("socket.io");
-require("./db/mongoose");
+const mongoose_1 = require("./db/mongoose");
 const createUserHandler_1 = require("./eventHandlers/createUserHandler");
 const userLogin_1 = require("./eventHandlers/userLogin");
 const user_in_lobby_1 = require("./eventHandlers/user_in_lobby");
@@ -15,6 +15,12 @@ const authUser_1 = require("./middleware/authUser");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server);
+try {
+    (0, mongoose_1.connect_to_db)();
+}
+catch (err) {
+    io.emit("db_error");
+}
 const port = process.env.PORT || 3000;
 // const publicDir = path.join(__dirname, '../../public');
 const clientDir = path_1.default.join(__dirname, "../../dist/public");

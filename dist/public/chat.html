@@ -20,7 +20,7 @@
 
         <div class="chat__main">
 
-            <div class="room-name"> <h1>RoomName</h1> </div>
+            <div id="current-room-name" class="room-name" >  </div>
             <div id="feed" class="chat__messages">
             </div>
 
@@ -115,6 +115,9 @@
         </ul>
     </script>
 
+    <script id="current-room-name-template" type="text/html">
+        <h1>{{currentRoomName}}</h1>
+    </script>
 
 </body>
 

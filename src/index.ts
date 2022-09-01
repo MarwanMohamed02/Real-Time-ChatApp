@@ -2,7 +2,7 @@ import express from "express"
 import http from "http"
 import path from "path";
 import { Server } from "socket.io";
-require("./db/mongoose")
+import { connect_to_db } from "./db/mongoose";
 import { UserDocument } from "./db/models/userModel"
 import { createUserHandler } from "./eventHandlers/createUserHandler";
 import { userLoginHandler } from "./eventHandlers/userLogin"
@@ -16,6 +16,12 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 
+try {
+    connect_to_db();
+}
+catch (err: any) {
+    io.emit("db_error");
+}
 
 
 const port = process.env.PORT || 3000;

@@ -2,7 +2,6 @@ const path = require("path")
 
 module.exports = {
     entry: {
-        
         index: "./public/client_side/index.ts",
         chat: "./public/client_side/chat.ts",
         createAccount: "./public/client_side/createAccount.ts",
