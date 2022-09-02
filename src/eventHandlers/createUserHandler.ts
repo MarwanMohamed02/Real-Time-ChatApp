@@ -4,9 +4,12 @@ import { User } from "../db/models/userModel";
 
 export function createUserHandler(io: Server, socket: Socket) {
     
-    socket.on("createNewUser", async ({ username }) => {
+    socket.on("createNewUser", async ({ username, password }) => {
         try {
-            const user = new User({ username });
+            if (await User.findOne({ username }))
+                return socket.emit("duplicate_user_error");
+            
+            const user = new User({ username, password });
         
             await user.genToken();
         

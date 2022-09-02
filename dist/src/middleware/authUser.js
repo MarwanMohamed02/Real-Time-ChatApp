@@ -13,7 +13,7 @@ async function authUser(socket, user) {
     }
     else if (token === "hello")
         return undefined;
-    const _id = jsonwebtoken_1.default.verify(token, "vehyhgehguufju8");
+    const _id = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
     try {
         user = await userModel_1.User.findOne({ _id, token });
         if (!user)

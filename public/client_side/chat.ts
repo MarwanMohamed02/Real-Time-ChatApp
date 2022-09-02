@@ -157,7 +157,9 @@ socket.on("showRoomers", (users: IUser[]) => {
 })
 
 socket.on("showActiveRooms", (activeRooms: IRoom[]) => {
-    console.log("ahoo");
+    if (activeRooms.length === 0)
+        activeRooms[0] = { name: "~ Create the first room ~" };
+        
     const updatedHTML = mustache.render(activeRoomsListTemplate, { activeRooms });
     activeRoomsList.innerHTML = updatedHTML;
 })

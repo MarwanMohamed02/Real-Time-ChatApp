@@ -14,10 +14,8 @@ const password = signUpForm.querySelector("#password") as HTMLInputElement;
 
 signUpForm.onsubmit = (e) => {
     e.preventDefault();
-    const username = userName.value;
-    console.log(username);
-    
-    socket.emit("createNewUser", { username });
+       
+    socket.emit("createNewUser", { username: userName.value, password: password.value });
 }
 
 
@@ -27,6 +25,13 @@ socket.on("user_created", ({ username, token, _id }) => {
     sessionStorage.setItem("_id", _id)
     signUpForm.action = "./chat.html";
     signUpForm.submit();
+})
+
+socket.on("duplicate_user_error", () => {
+    userName.value = "";
+    password.value = "";
+
+    userName.placeholder = "This username is already taken..."
 })
 
 

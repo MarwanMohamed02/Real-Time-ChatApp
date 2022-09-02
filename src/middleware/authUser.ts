@@ -12,7 +12,7 @@ export async function authUser(socket: Socket, user: UserDocument | null | undef
     else if (token === "hello")
         return undefined;
 
-    const _id = jwt.verify(token, "vehyhgehguufju8")
+    const _id = jwt.verify(token, process.env.JWT_SECRET as string)
     
     try {
         user = await User.findOne({ _id, token });

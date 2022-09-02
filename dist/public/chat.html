@@ -50,7 +50,7 @@
             <div class="fixed-div" id="active-rooms-list"></div>
 
             <form>
-                <input id="new-room-name" placeholder="Enter a name for your room..."></input>
+                <input id="new-room-name" placeholder="Enter a name for your room..." autocomplete="off"></input>
                 <button id="create-room-button">+ Create a room</button>
             </form>
 
@@ -92,9 +92,9 @@
                     <span class="message__name">{{name}}</span>
                     <span class="message__meta">{{createdAt}}</span>
                 </p>
+                <p><a href="{{text}}" target="_blank">My Location</a></p>
             </div>
 
-            <p><a href="{{text}}" target="_blank">My Location</a></p>
            
     </script>
 

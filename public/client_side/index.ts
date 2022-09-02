@@ -12,13 +12,13 @@ const socket = io("http://localhost:3000/", {
 const joinForm = document.querySelector("#join-form") as HTMLFormElement;
 const joinButton = joinForm.querySelector("button") as HTMLButtonElement;
 const userName = joinForm.querySelector("#username") as HTMLInputElement;
-//const room = joinForm.querySelector("#room") as HTMLInputElement;
+const password = joinForm.querySelector("#password") as HTMLInputElement;
 
 
     
 joinForm.onsubmit =  async (event) => {
     event.preventDefault();
-    socket.emit("login", { username: userName.value });
+    socket.emit("login", { username: userName.value, password: password.value });
     joinButton.setAttribute("disabled", "disabled"); 
 }
 
@@ -30,15 +30,17 @@ socket.on("found", ({ token, username, _id }) => {
     joinForm.submit();
 })
 
-socket.on("notFound", () => {
+socket.on("login_error", (errMessage: string) => {
     joinButton.removeAttribute("disabled");
     userName.value = "";
-    userName.placeholder = "Username not found... try again";
+    password.value = "";
+    userName.placeholder = errMessage;
 })
 
 socket.on("already_logged_in", () => {
     joinButton.disabled = false;
-    userName.value = ""
+    userName.value = "";
+    password.value = "";
     userName.placeholder = "You are already logged in!"
 })
 
