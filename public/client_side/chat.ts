@@ -3,6 +3,7 @@ import mustache from "mustache"
 import { Message } from "../../src/utils/messages"
 import { IUser } from "../../src/db/models/userModel"
 import { IRoom, RoomDocument } from "../../src/db/models/roomModel"
+import { autoScroll } from "../utils/autoScroll"
 
 
 const { token, username, _id } = sessionStorage;
@@ -76,6 +77,7 @@ socket.on("message", (message: Message) => {
     let updatedHTML = mustache.render(template, { name, text, createdAt, style });
     feed.insertAdjacentHTML("beforeend", updatedHTML);
     
+    autoScroll(feed);
 })
 
 // Sending a location message
@@ -90,6 +92,7 @@ socket.on("sendLocationMessage", (url: Message) => {
     let updatedHTML = mustache.render(locationMessageTemplate, { name, text, createdAt, style });
     feed.insertAdjacentHTML("beforeend", updatedHTML);
 
+    autoScroll(feed);
 })
 
 socket.on("loadMessages", (messages: Message[]) => {
@@ -106,6 +109,8 @@ socket.on("loadMessages", (messages: Message[]) => {
         let updatedHTML =  mustache.render(template, { name, text, createdAt, style });
         feed.insertAdjacentHTML("beforeend", updatedHTML);
     }
+
+    feed.scrollTop = feed.scrollHeight;
 
     sendMessageButton.disabled = false;
     sendLocationButton.disabled = false;
