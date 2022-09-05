@@ -7,8 +7,7 @@ function createRoomHandler(io, socket, user) {
         try {
             const newRoom = new roomModel_1.Room({ name: newRoomName });
             await newRoom.save();
-            user.currentRoom = newRoom._id;
-            await user.save();
+            console.log(`created ${newRoom.name}`);
             socket.emit("user_created_room", newRoom.name);
         }
         catch (err) {

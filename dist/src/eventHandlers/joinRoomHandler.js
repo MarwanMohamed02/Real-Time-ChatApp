@@ -11,7 +11,7 @@ function joinRoomHandler(io, socket, user) {
         try {
             let room = await roomModel_1.Room.findOne({ name: roomName });
             if (!room) {
-                return socket.emit("room_not_found");
+                return socket.emit("room_not_found", roomName);
             }
             if (!user.currentRoom || !(user.currentRoom?.toString() === room._id.toString())) {
                 socket.broadcast.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has joined the room!`));

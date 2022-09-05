@@ -10,8 +10,7 @@ export function createRoomHandler(io: Server, socket: Socket, user: UserDocument
             const newRoom = new Room({ name: newRoomName });
             await newRoom.save();
     
-            user.currentRoom = newRoom._id;
-            await user.save();
+            console.log(`created ${newRoom.name}`);
     
             socket.emit("user_created_room", newRoom.name);
         }

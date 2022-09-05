@@ -16,6 +16,20 @@ function userInLobbyHandler(io, socket, user) {
                 socket.emit("db_error");
             }
         }
+        let room;
+        socket.on("findRoom", async (roomName) => {
+            try {
+                const room = await roomModel_1.Room.findOne({ name: roomName });
+                if (!room) {
+                    socket.emit("room_not_found", roomName);
+                }
+                else
+                    socket.emit("room_found", room.name);
+            }
+            catch (err) {
+                socket.emit("db_error");
+            }
+        });
         (0, joinRoomHandler_1.joinRoomHandler)(io, socket, user);
         try {
             socket.emit("showActiveRooms", await roomModel_1.Room.getActiveRooms());

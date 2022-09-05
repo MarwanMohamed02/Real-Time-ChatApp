@@ -21,6 +21,23 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
             }
         }
 
+        let room: RoomDocument;
+
+        socket.on("findRoom", async (roomName) => {
+            try {
+                const room = await Room.findOne({ name: roomName }) as RoomDocument;
+
+                if (!room) {
+                    socket.emit("room_not_found", roomName);
+                }
+                else
+                    socket.emit("room_found", room.name);
+            }
+            catch (err: any) {
+                socket.emit("db_error");
+            }
+        })
+
         joinRoomHandler(io, socket, user);
 
         try {
@@ -33,6 +50,7 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
         createRoomHandler(io, socket, user as UserDocument);
 
         userLogoutHandler(io, socket);
+
     })
 
 }

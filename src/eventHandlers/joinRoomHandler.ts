@@ -14,7 +14,7 @@ export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) 
             let room = await Room.findOne({ name: roomName }) as RoomDocument;
     
             if (!room) {
-                return socket.emit("room_not_found");
+                return socket.emit("room_not_found", roomName);
             }
                 
             

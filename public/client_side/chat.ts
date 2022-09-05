@@ -6,7 +6,7 @@ import { IRoom, RoomDocument } from "../../src/db/models/roomModel"
 import { autoScroll } from "../utils/autoScroll"
 
 
-const { token, username, _id, room } = sessionStorage;
+const { token, username, _id, room, status } = sessionStorage;
 
 const socket = io("http://localhost:3000", {
     auth: {
@@ -14,7 +14,7 @@ const socket = io("http://localhost:3000", {
     }
 });
 
-
+console.log(room, status);
 socket.emit("user_in_lobby");
 
 
@@ -37,11 +37,13 @@ const sendLocationButton = document.querySelector("#sendLocation") as HTMLButton
 
 // Right Sidebar Elements
 const joinRoomButton = document.querySelector("#join-room-button") as HTMLButtonElement;
+joinRoomButton.disabled = true;
 const roomName = document.querySelector("#room-name") as HTMLInputElement;
 
 const activeRoomsList = document.getElementById("active-rooms-list") as HTMLDivElement;
 
 const createRoomButton = document.getElementById("create-room-button") as HTMLButtonElement;
+createRoomButton.disabled = true;
 const newRoomName = document.getElementById("new-room-name") as HTMLInputElement;
 
 const leaveRoomButton = document.querySelector("#leave-room-button") as HTMLButtonElement;
@@ -119,11 +121,16 @@ socket.on("loadMessages", (messages: Message[]) => {
 
 })
 
+socket.on("room_found", (room: string) => {
+    sessionStorage.setItem("requestedRoom", room);
+    socket.emit("leaveRoom");     
+})
+
 socket.on("user_joined_room", (room: string) => {
     leaveRoomButton.disabled = false;
     // feed.innerHTML = "";
     sessionStorage.setItem("room", room);
-    sessionStorage.removeItem("requestedRoom");
+    //sessionStorage.removeItem("requestedRoom");
 
     currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: room });
 
@@ -131,15 +138,18 @@ socket.on("user_joined_room", (room: string) => {
 })
 
 socket.on("user_created_room", (new_room_name: string) => {
-    window.location.reload();
-    createRoomButton.disabled = false;
-    leaveRoomButton.disabled = false;
+
+    if (sessionStorage.getItem("room")) {
+        sessionStorage.setItem("requestedRoom", new_room_name);
+        socket.emit("leaveRoom");
+    }
+    else {
+        socket.emit("joinRoom", { roomName: new_room_name, username });
+    }
+
     newRoomName.value = "";
     message.focus();
-    feed.innerHTML = "";
-    const currentRoom = sessionStorage.getItem("room");
-    currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: new_room_name });
-    socket.emit("joinRoom", { roomName: new_room_name, username }, currentRoom);
+    // window.location.reload();
 })
 
 socket.on("user_returned", (room: RoomDocument) => {
@@ -173,8 +183,12 @@ socket.on("showActiveRooms", (activeRooms: IRoom[]) => {
 })
 
 socket.on("user_left_room", () => {
+    sessionStorage.removeItem("room");
+
     const { requestedRoom, status } = sessionStorage;
 
+    console.log(requestedRoom, status);
+    
     if (status === "logout") {
         sessionStorage.removeItem("status");
         return socket.emit("logout", token);
@@ -182,26 +196,27 @@ socket.on("user_left_room", () => {
     else if (!requestedRoom) {
         roomName.placeholder = "Enter a room to join...";
         currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: "Lobby" });
-        sessionStorage.removeItem("room");
         usersList.innerHTML = ""
         feed.innerHTML = "";
         sendMessageButton.disabled = true;
         sendLocationButton.disabled = true;
+        window.location.reload();
     }
     else {
         socket.emit("joinRoom", { roomName: requestedRoom, username });
+        sessionStorage.removeItem("requestedRoom");
+        window.location.reload();
     }
-    window.location.reload();
 })
 
 socket.on("loggedOut", () => {
     document.location.href = "./";
 })
 
-socket.on("room_not_found", () => {
+socket.on("room_not_found", (room: string) => {
     
     roomName.value = "";
-    roomName.placeholder = "Room not found... try again";
+    roomName.placeholder = `${room} does not exist`;
 })
 
 socket.on("duplicate_room_error", () => {
@@ -217,11 +232,23 @@ socket.on("connect_error", (err) => {
 
 /* DOM Listeners*/
 
-joinRoomButton.onclick = async (e) => {
-    let currentRoom = sessionStorage.getItem("room");
+roomName.oninput = (e) => {
     e.preventDefault();
-    if (roomName.value.length === 0)
-        return;
+
+    if (roomName.value.length === 0) {
+        joinRoomButton.disabled = true;
+        roomName.placeholder = "Enter a room to join...";
+    }
+    else if (joinRoomButton.disabled)
+        joinRoomButton.disabled = false;
+}
+
+joinRoomButton.onclick = async (e) => {
+    e.preventDefault();
+    let currentRoom = sessionStorage.getItem("room");
+    console.log("join room button pressed");
+
+    joinRoomButton.disabled = true;
 
     if (currentRoom && currentRoom === roomName.value) {
          roomName.value = "";
@@ -233,22 +260,36 @@ joinRoomButton.onclick = async (e) => {
         roomName.placeholder = "Enter a room to join...";
     }
     else {    
-        socket.emit("leaveRoom");
-        sessionStorage.setItem("requestedRoom", roomName.value);
+        socket.emit("findRoom", roomName.value);
+        // sessionStorage.setItem("requestedRoom", roomName.value);
     }
 }
 
+
 leaveRoomButton.onclick = (e) => {
     e.preventDefault();
+    console.log("leave room button pressed");
+
     socket.emit("leaveRoom");
     leaveRoomButton.disabled = true;
 }
 
-createRoomButton.onclick = () => {
+
+newRoomName.oninput = (e) => {
+    e.preventDefault();
+    if (newRoomName.value.length === 0) {
+        createRoomButton.disabled = true;
+    }
+    else if (createRoomButton.disabled)
+        createRoomButton.disabled = false;
+}
+createRoomButton.onclick = (e) => {
+    e.preventDefault();
+    console.log("create room button pressed");
+
     createRoomButton.disabled = true;
-    if (sessionStorage.getItem("room"))
-        socket.emit("leaveRoom");
-    socket.emit("createNewRoom", newRoomName.value);
+    
+    socket.emit("createNewRoom", newRoomName.value);    
 }
 
 // Sending username & room to server
@@ -296,6 +337,8 @@ sendLocationButton.onclick = function () {
 
 // Logout
 logoutButton.onclick = (e) => {
+    console.log("logout button pressed");
+
     e.preventDefault();
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
@@ -303,7 +346,6 @@ logoutButton.onclick = (e) => {
 
     if (sessionStorage.getItem("room")) {
         socket.emit("leaveRoom");
-        sessionStorage.removeItem("room");
         sessionStorage.setItem("status", "logout");
     }
     else
@@ -315,3 +357,4 @@ socket.on("db_error", () => {
     alert("An error from our side, Reloading...");
     window.location.reload();
 })
+
