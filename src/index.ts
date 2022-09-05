@@ -8,13 +8,14 @@ import { createUserHandler } from "./eventHandlers/createUserHandler";
 import { userLoginHandler } from "./eventHandlers/userLogin"
 import { userInLobbyHandler } from "./eventHandlers/user_in_lobby";
 import { authUser } from "./middleware/authUser";
-import { joinRoomHandler } from "./eventHandlers/joinRoomHandler";
 
 
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: { origin: "*", }
+});
 
 
 try {
@@ -56,7 +57,9 @@ io.on("connection", (socket) => {
 
     createUserHandler(io, socket);
 
-    userInLobbyHandler(io, socket, user as UserDocument);   
+    userInLobbyHandler(io, socket, user as UserDocument);  
+    
+    socket.on("close", () => console.log("closed"));
     
 })
 

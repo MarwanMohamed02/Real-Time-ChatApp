@@ -50,7 +50,6 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
         createRoomHandler(io, socket, user as UserDocument);
 
         userLogoutHandler(io, socket);
-
     })
 
 }

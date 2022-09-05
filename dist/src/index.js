@@ -14,7 +14,9 @@ const user_in_lobby_1 = require("./eventHandlers/user_in_lobby");
 const authUser_1 = require("./middleware/authUser");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
-const io = new socket_io_1.Server(server);
+const io = new socket_io_1.Server(server, {
+    cors: { origin: "*", }
+});
 try {
     (0, mongoose_1.connect_to_db)();
 }
@@ -41,6 +43,7 @@ io.on("connection", (socket) => {
     (0, userLogin_1.userLoginHandler)(io, socket);
     (0, createUserHandler_1.createUserHandler)(io, socket);
     (0, user_in_lobby_1.userInLobbyHandler)(io, socket, user);
+    socket.on("close", () => console.log("closed"));
 });
 server.listen(port, () => console.log(`Server up on port ${port}`));
 // async function test() {

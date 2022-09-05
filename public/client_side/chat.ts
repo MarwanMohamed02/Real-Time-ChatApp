@@ -8,7 +8,7 @@ import { autoScroll } from "../utils/autoScroll"
 
 const { token, username, _id, room, status } = sessionStorage;
 
-const socket = io("http://localhost:3000", {
+const socket = io( {
     auth: {
         token
     }
@@ -116,7 +116,6 @@ socket.on("loadMessages", (messages: Message[]) => {
 
     feed.scrollTop = feed.scrollHeight;
 
-    sendMessageButton.disabled = false;
     sendLocationButton.disabled = false;
 
 })
@@ -246,7 +245,6 @@ roomName.oninput = (e) => {
 joinRoomButton.onclick = async (e) => {
     e.preventDefault();
     let currentRoom = sessionStorage.getItem("room");
-    console.log("join room button pressed");
 
     joinRoomButton.disabled = true;
 
@@ -268,7 +266,6 @@ joinRoomButton.onclick = async (e) => {
 
 leaveRoomButton.onclick = (e) => {
     e.preventDefault();
-    console.log("leave room button pressed");
 
     socket.emit("leaveRoom");
     leaveRoomButton.disabled = true;
@@ -285,7 +282,6 @@ newRoomName.oninput = (e) => {
 }
 createRoomButton.onclick = (e) => {
     e.preventDefault();
-    console.log("create room button pressed");
 
     createRoomButton.disabled = true;
     
@@ -294,6 +290,15 @@ createRoomButton.onclick = (e) => {
 
 // Sending username & room to server
 //socket.emit("joinData", { username, room });
+
+message.oninput = (e) => {
+    e.preventDefault();
+
+    if (message.value.length === 0)
+        sendMessageButton.disabled = true;
+    else
+        sendMessageButton.disabled = false;
+}
 
 // Reading and sending a message from the user
 form.addEventListener("submit", (event) => {
@@ -305,8 +310,7 @@ form.addEventListener("submit", (event) => {
 
     // sending message to the users
     socket.emit("sendMessage", message.value, (msg: string) => {
-        console.log(msg);
-        sendMessageButton.disabled = false;
+        alert(msg);
     });
 
     // resetting after sending message
@@ -337,9 +341,8 @@ sendLocationButton.onclick = function () {
 
 // Logout
 logoutButton.onclick = (e) => {
-    console.log("logout button pressed");
-
     e.preventDefault();
+
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     sessionStorage.removeItem("_id");
