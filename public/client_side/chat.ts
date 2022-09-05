@@ -6,7 +6,7 @@ import { IRoom, RoomDocument } from "../../src/db/models/roomModel"
 import { autoScroll } from "../utils/autoScroll"
 
 
-const { token, username, _id } = sessionStorage;
+const { token, username, _id, room } = sessionStorage;
 
 const socket = io("http://localhost:3000", {
     auth: {
@@ -47,6 +47,7 @@ const newRoomName = document.getElementById("new-room-name") as HTMLInputElement
 const leaveRoomButton = document.querySelector("#leave-room-button") as HTMLButtonElement;
 leaveRoomButton.disabled = true;
 const logoutButton = document.querySelector("#logout-button") as HTMLButtonElement;
+
 
 // Mustache templates
 const adminMessageTemplate = document.getElementById("admin-message-template")?.innerHTML as string
@@ -97,6 +98,7 @@ socket.on("sendLocationMessage", (url: Message) => {
 
 socket.on("loadMessages", (messages: Message[]) => {
 
+    feed.innerHTML = "";
     for (let i = 0; i < messages.length; i++) {
         const { author, text, createdAt } = messages[i];
         let { name } = author;
@@ -119,8 +121,9 @@ socket.on("loadMessages", (messages: Message[]) => {
 
 socket.on("user_joined_room", (room: string) => {
     leaveRoomButton.disabled = false;
-    feed.innerHTML = "";
+    // feed.innerHTML = "";
     sessionStorage.setItem("room", room);
+    sessionStorage.removeItem("requestedRoom");
 
     currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: room });
 
@@ -169,6 +172,27 @@ socket.on("showActiveRooms", (activeRooms: IRoom[]) => {
     activeRoomsList.innerHTML = updatedHTML;
 })
 
+socket.on("user_left_room", () => {
+    const { requestedRoom, status } = sessionStorage;
+
+    if (status === "logout") {
+        sessionStorage.removeItem("status");
+        return socket.emit("logout", token);
+    }
+    else if (!requestedRoom) {
+        roomName.placeholder = "Enter a room to join...";
+        currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: "Lobby" });
+        sessionStorage.removeItem("room");
+        usersList.innerHTML = ""
+        feed.innerHTML = "";
+        sendMessageButton.disabled = true;
+        sendLocationButton.disabled = true;
+    }
+    else {
+        socket.emit("joinRoom", { roomName: requestedRoom, username });
+    }
+    window.location.reload();
+})
 
 socket.on("loggedOut", () => {
     document.location.href = "./";
@@ -195,9 +219,11 @@ socket.on("connect_error", (err) => {
 
 joinRoomButton.onclick = async (e) => {
     let currentRoom = sessionStorage.getItem("room");
+    e.preventDefault();
+    if (roomName.value.length === 0)
+        return;
 
     if (currentRoom && currentRoom === roomName.value) {
-        e.preventDefault();
          roomName.value = "";
          roomName.placeholder = "You are already in this room";
      }
@@ -208,22 +234,14 @@ joinRoomButton.onclick = async (e) => {
     }
     else {    
         socket.emit("leaveRoom");
-        socket.emit("joinRoom", { roomName: roomName.value, username });
+        sessionStorage.setItem("requestedRoom", roomName.value);
     }
 }
 
-
-leaveRoomButton.onclick = () => {
-    roomName.placeholder = "Enter a room to join...";
-    currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: "Lobby" });
-    sessionStorage.removeItem("room");
-    usersList.innerHTML = ""
-    feed.innerHTML = "";
-    sendMessageButton.disabled = true;
-    sendLocationButton.disabled = true;
+leaveRoomButton.onclick = (e) => {
+    e.preventDefault();
     socket.emit("leaveRoom");
     leaveRoomButton.disabled = true;
-   
 }
 
 createRoomButton.onclick = () => {
@@ -277,7 +295,8 @@ sendLocationButton.onclick = function () {
 
 
 // Logout
-logoutButton.onclick = () => {
+logoutButton.onclick = (e) => {
+    e.preventDefault();
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     sessionStorage.removeItem("_id");
@@ -285,9 +304,10 @@ logoutButton.onclick = () => {
     if (sessionStorage.getItem("room")) {
         socket.emit("leaveRoom");
         sessionStorage.removeItem("room");
+        sessionStorage.setItem("status", "logout");
     }
-
-    socket.emit("logout", token);
+    else
+        socket.emit("logout", token);
 }
 
 

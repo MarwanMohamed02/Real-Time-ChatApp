@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.joinRoomHandler = void 0;
 const roomModel_1 = require("../db/models/roomModel");
-const userModel_1 = require("../db/models/userModel");
 const messages_1 = require("../utils/messages");
+const leaveRoomHandler_1 = require("./leaveRoomHandler");
 const messagesHandler_1 = require("./messagesHandler");
-const roomDataHandler_1 = require("./roomDataHandler");
+const updateRoomData_1 = require("./updateRoomData");
 function joinRoomHandler(io, socket, user) {
     socket.on("joinRoom", async ({ roomName, username }) => {
         try {
@@ -21,32 +21,8 @@ function joinRoomHandler(io, socket, user) {
             socket.join(room.name);
             socket.emit("user_joined_room", room.name);
             (0, messagesHandler_1.messagesHandler)(io, socket, room, user);
-            (0, roomDataHandler_1.roomDataHandler)(io, socket, room);
-            // Alerting users that someone has left
-            socket.on("leaveRoom", async () => {
-                if (user) {
-                    user.currentRoom = undefined;
-                    await user.save();
-                }
-                console.log(`${user.username} left ${room.name}`);
-                socket.leave(room.name);
-                io.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`));
-                await room.populate("users");
-                io.to(room.name).emit("showRoomers", room.toObject().users);
-            });
-        }
-        catch (err) {
-            socket.emit("db_error");
-        }
-    });
-    // Logout
-    socket.on("logout", async (token) => {
-        try {
-            const user = await userModel_1.User.findOne({ token });
-            if (user) {
-                await user.logOut();
-                socket.emit("loggedOut");
-            }
+            (0, updateRoomData_1.updateRoomData)(io, socket, room);
+            (0, leaveRoomHandler_1.leaveRoomHandler)(io, socket, user, room);
         }
         catch (err) {
             socket.emit("db_error");

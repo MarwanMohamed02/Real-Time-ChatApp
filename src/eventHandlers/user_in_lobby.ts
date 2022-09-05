@@ -3,6 +3,7 @@ import { Room, RoomDocument } from "../db/models/roomModel";
 import { UserDocument } from "../db/models/userModel";
 import { createRoomHandler } from "./createRoomHandler";
 import { joinRoomHandler } from "./joinRoomHandler";
+import { userLogoutHandler } from "./userLogoutHander";
 
 
 
@@ -30,6 +31,8 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
         }
         
         createRoomHandler(io, socket, user as UserDocument);
+
+        userLogoutHandler(io, socket);
     })
 
 }

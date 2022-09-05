@@ -4,6 +4,7 @@ exports.userInLobbyHandler = void 0;
 const roomModel_1 = require("../db/models/roomModel");
 const createRoomHandler_1 = require("./createRoomHandler");
 const joinRoomHandler_1 = require("./joinRoomHandler");
+const userLogoutHander_1 = require("./userLogoutHander");
 function userInLobbyHandler(io, socket, user) {
     socket.on("user_in_lobby", async () => {
         if (user.currentRoom) {
@@ -23,6 +24,7 @@ function userInLobbyHandler(io, socket, user) {
             socket.emit("db_error");
         }
         (0, createRoomHandler_1.createRoomHandler)(io, socket, user);
+        (0, userLogoutHander_1.userLogoutHandler)(io, socket);
     });
 }
 exports.userInLobbyHandler = userInLobbyHandler;

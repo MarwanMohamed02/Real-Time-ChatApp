@@ -2,8 +2,9 @@ import { Server, Socket } from "socket.io";
 import { Room, RoomDocument } from "../db/models/roomModel";
 import { User, UserDocument } from "../db/models/userModel";
 import { genMessage } from "../utils/messages";
+import { leaveRoomHandler } from "./leaveRoomHandler";
 import { messagesHandler } from "./messagesHandler";
-import { roomDataHandler } from "./roomDataHandler";
+import { updateRoomData } from "./updateRoomData";
 
 
 export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) {
@@ -33,46 +34,13 @@ export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) 
             messagesHandler(io, socket, room, user);
     
     
-            roomDataHandler(io, socket, room);
+            updateRoomData(io, socket, room);
     
             
-            // Alerting users that someone has left
-            socket.on("leaveRoom", async () => {
-                if (user) {
-                    user.currentRoom = undefined
-                    await user.save();
-                }
-
-                console.log(`${user.username} left ${room.name}`)
-    
-                socket.leave(room.name);
-                io.to(room.name).emit("message", genMessage(`${username} has left the room :(`));
-    
-                await room.populate("users");
-    
-                io.to(room.name).emit("showRoomers", room.toObject().users);
-            })
+            leaveRoomHandler(io, socket, user, room);
         }
         catch (err: any) {
             socket.emit("db_error");
         }
-    })
-
-
-
-    // Logout
-    socket.on("logout", async (token) => {
-        try {
-            const user = await User.findOne({ token }) as UserDocument;
-    
-            if (user) {
-                await user.logOut();
-    
-                socket.emit("loggedOut");
-            }
-        }
-        catch (err: any) {
-            socket.emit("db_error");
-        }
-    })
+    })   
 }
