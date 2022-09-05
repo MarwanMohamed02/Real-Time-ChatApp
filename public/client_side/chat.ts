@@ -195,21 +195,23 @@ socket.on("connect_error", (err) => {
 
 joinRoomButton.onclick = async (e) => {
     let currentRoom = sessionStorage.getItem("room");
-    if (currentRoom !== roomName.value && roomName.value.length !== 0) {    
-        
-        if (currentRoom) {
-            socket.emit("leaveRoom");
-        }
-        const room = roomName.value;
+
+    if (currentRoom && currentRoom === roomName.value) {
+        e.preventDefault();
+         roomName.value = "";
+         roomName.placeholder = "You are already in this room";
+     }
+    else if (!currentRoom) {
+        socket.emit("joinRoom", { roomName: roomName.value, username });
         roomName.value = "";
         roomName.placeholder = "Enter a room to join...";
-        socket.emit("joinRoom", { roomName: room, username });
     }
-    else {
-        roomName.value = "";
-        roomName.placeholder = "You are already in this room";
+    else {    
+        socket.emit("leaveRoom");
+        socket.emit("joinRoom", { roomName: roomName.value, username });
     }
 }
+
 
 leaveRoomButton.onclick = () => {
     roomName.placeholder = "Enter a room to join...";
@@ -279,6 +281,12 @@ logoutButton.onclick = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     sessionStorage.removeItem("_id");
+
+    if (sessionStorage.getItem("room")) {
+        socket.emit("leaveRoom");
+        sessionStorage.removeItem("room");
+    }
+
     socket.emit("logout", token);
 }
 

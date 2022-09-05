@@ -28,6 +28,7 @@ function joinRoomHandler(io, socket, user) {
                     user.currentRoom = undefined;
                     await user.save();
                 }
+                console.log(`${user.username} left ${room.name}`);
                 socket.leave(room.name);
                 io.to(room.name).emit("message", (0, messages_1.genMessage)(`${username} has left the room :(`));
                 await room.populate("users");

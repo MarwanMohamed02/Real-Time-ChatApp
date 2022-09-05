@@ -15,9 +15,6 @@ export function autoScroll(feed: HTMLDivElement) {
     const scrollOffset = visibleHeight + feed.scrollTop;
 
 
-    console.log(containerHeight, newMessageHeight, scrollOffset)
-
     if (containerHeight - newMessageHeight <= scrollOffset + 5)
         feed.scrollTop = feed.scrollHeight;
-
 }

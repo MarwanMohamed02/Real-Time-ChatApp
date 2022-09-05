@@ -42,6 +42,8 @@ export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) 
                     user.currentRoom = undefined
                     await user.save();
                 }
+
+                console.log(`${user.username} left ${room.name}`)
     
                 socket.leave(room.name);
                 io.to(room.name).emit("message", genMessage(`${username} has left the room :(`));
