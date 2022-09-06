@@ -28,10 +28,15 @@ catch (err: any) {
 
 const port = process.env.PORT;
 
+const clientDir = path.join(__dirname, "../public");
+app.use(express.static(clientDir));
 
+
+app.get("/", (req, res) => {
+    res.sendFile("/index.html");
+})
 
 // const publicDir = path.join(__dirname, '../../public');
-const clientDir = path.join(__dirname, "../../dist/public");
 
 let user: UserDocument | undefined | null;
 
@@ -47,7 +52,6 @@ io.use(async (socket, next) => {
 })
 
 // app.use(express.static(publicDir));
-app.use(express.static(clientDir));
 
 
 io.on("connection", (socket) => {
