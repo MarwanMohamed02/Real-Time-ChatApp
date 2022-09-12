@@ -9,7 +9,7 @@ import { updateRoomData } from "./updateRoomData";
 
 export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) {
 
-    socket.on("joinRoom", async({ roomName, username }) => {
+    socket.on("joinRoom", async({ roomName }) => {
         try {
             let room = await Room.findOne({ name: roomName }) as RoomDocument;
     
@@ -20,7 +20,7 @@ export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) 
             
             if (!user.currentRoom || !(user.currentRoom?.toString() === room._id.toString())) {
                 
-                socket.broadcast.to(room.name).emit("message", genMessage(`${username} has joined the room!`));
+                socket.broadcast.to(room.name).emit("message", genMessage(`${user.username} has joined the room!`));
             }
             
             user.currentRoom = room._id;
@@ -28,7 +28,7 @@ export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) 
             
             socket.join(room.name);
             
-            socket.emit("user_joined_room", room.name);
+            socket.emit("user_joined_room", room.name, user.username);
     
             
             messagesHandler(io, socket, room, user);
@@ -40,7 +40,8 @@ export function joinRoomHandler(io: Server, socket: Socket, user: UserDocument) 
             leaveRoomHandler(io, socket, user, room);
         }
         catch (err: any) {
-            socket.emit("db_error");
+            socket.emit("db_error", err);
+            console.log("Join room err: \n" + err);
         }
     })   
 }

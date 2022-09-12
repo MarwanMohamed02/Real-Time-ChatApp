@@ -34,7 +34,8 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
                     socket.emit("room_found", room.name);
             }
             catch (err: any) {
-                socket.emit("db_error");
+                socket.emit("db_error", err.message);
+                console.log("Find room err: \n" + err);
             }
         })
 
@@ -44,7 +45,8 @@ export function userInLobbyHandler(io: Server, socket: Socket, user: UserDocumen
             socket.emit("showActiveRooms", await Room.getActiveRooms());
         }
         catch (err: any) {
-            socket.emit("db_error");
+            socket.emit("db_error", err);
+            console.log("Show active rooms err: \n" + err);
         }
         
         createRoomHandler(io, socket, user as UserDocument);

@@ -18,8 +18,8 @@ export function userLoginHandler(io: Server, socket: Socket) {
             socket.emit("found", { token, username, _id: user?._id.toString() });
         }
         catch (err: any) {
-            io.emit("db_error");
-
+            socket.emit("db_error", err);
+            console.log("Login err: \n" + err);
         }
     });
 

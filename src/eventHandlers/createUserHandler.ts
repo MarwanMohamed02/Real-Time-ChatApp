@@ -18,8 +18,8 @@ export function createUserHandler(io: Server, socket: Socket) {
             socket.emit("user_created", user);
         }
         catch (err: any) {
-            socket.emit("db_error");
-        }
+            socket.emit("db_error", err);
+            console.log("Create user err: \n" + err);        }
     })
 
 }

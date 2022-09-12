@@ -4,17 +4,32 @@ import { Message } from "../../src/utils/messages"
 import { IUser } from "../../src/db/models/userModel"
 import { IRoom, RoomDocument } from "../../src/db/models/roomModel"
 import { autoScroll } from "../utils/autoScroll"
+import Stack from "../utils/Stack"
 
 
-const { token, username, _id, room, status } = sessionStorage;
+// Initializing the page and logging out useful info
+const { token, username, _id, room, Status } = sessionStorage;
+const { storedTokens:previouslyStoredTokens } = localStorage;
+if (previouslyStoredTokens) {
+    let stored_tokens = new Stack<string>(JSON.parse(previouslyStoredTokens));
+    stored_tokens.remove(token)
+    localStorage.setItem("storedTokens", JSON.stringify(stored_tokens))
+    console.log("stored tokens: ");
+    console.log(stored_tokens);
+}
+console.log(Status);
+console.log(token);
+sessionStorage.setItem("Status", "online");
 
+
+// Connecting to the server
 const socket = io( {
     auth: {
         token
     }
 });
 
-console.log(room, status);
+console.log(room, Status);
 socket.emit("user_in_lobby");
 
 
@@ -125,10 +140,11 @@ socket.on("room_found", (room: string) => {
     socket.emit("leaveRoom");     
 })
 
-socket.on("user_joined_room", (room: string) => {
+socket.on("user_joined_room", (room: string, userName: string) => {
     leaveRoomButton.disabled = false;
     // feed.innerHTML = "";
     sessionStorage.setItem("room", room);
+    sessionStorage.setItem("username", userName)
     //sessionStorage.removeItem("requestedRoom");
 
     currentRoomName.innerHTML = mustache.render(currentRoomNameTemplate, { currentRoomName: room });
@@ -184,12 +200,12 @@ socket.on("showActiveRooms", (activeRooms: IRoom[]) => {
 socket.on("user_left_room", () => {
     sessionStorage.removeItem("room");
 
-    const { requestedRoom, status } = sessionStorage;
+    const { requestedRoom, Status } = sessionStorage;
 
-    console.log(requestedRoom, status);
+    console.log(requestedRoom, Status);
     
-    if (status === "logout") {
-        sessionStorage.removeItem("status");
+    if (Status === "logout") {
+        sessionStorage.setItem("Status", "online");
         return socket.emit("logout", token);
     }
     else if (!requestedRoom) {
@@ -209,6 +225,21 @@ socket.on("user_left_room", () => {
 })
 
 socket.on("loggedOut", () => {
+    const { token: tokenToBeRemoved } = sessionStorage;
+    const storedTokens = localStorage.getItem("storedTokens")
+    if (storedTokens) {
+        let tokens= new Stack<string>(JSON.parse(storedTokens));
+        console.log(`token removed: ${tokenToBeRemoved}`);
+        if (tokens.contains(tokenToBeRemoved))
+            tokens.remove(tokenToBeRemoved);
+        console.log("filtered tokens: " + tokens.arr)
+        localStorage.setItem("storedTokens", JSON.stringify(tokens));
+    }
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("_id");
+
+    
     document.location.href = "./";
 })
 
@@ -343,21 +374,34 @@ sendLocationButton.onclick = function () {
 logoutButton.onclick = (e) => {
     e.preventDefault();
 
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("_id");
 
     if (sessionStorage.getItem("room")) {
         socket.emit("leaveRoom");
-        sessionStorage.setItem("status", "logout");
+        sessionStorage.setItem("Status", "logout");
     }
     else
         socket.emit("logout", token);
 }
 
 
-socket.on("db_error", () => {
-    alert("An error from our side, Reloading...");
+socket.on("db_error", (msg) => {
+    alert("An error from our side, Reloading...\n" + msg);
     window.location.reload();
 })
 
+window.onbeforeunload = () => {
+    const { storedTokens } = localStorage;
+    const { token: tokenToPush } = sessionStorage;
+    sessionStorage.removeItem("Status");
+    if (!tokenToPush) {
+        return;
+    }
+   
+    let tokens = new Stack<string>(JSON.parse(storedTokens as string));  
+    if (!tokens.contains(tokenToPush)) {
+        tokens.push(token);
+        console.log( "pushed tokens: " + tokens.arr);
+        localStorage.setItem("storedTokens", JSON.stringify(tokens));
+    }
+    
+}

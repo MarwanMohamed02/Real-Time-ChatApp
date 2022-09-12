@@ -8,7 +8,7 @@ import { createUserHandler } from "./eventHandlers/createUserHandler";
 import { userLoginHandler } from "./eventHandlers/userLogin"
 import { userInLobbyHandler } from "./eventHandlers/user_in_lobby";
 import { authUser } from "./middleware/authUser";
-
+import Stack from "../public/utils/Stack"
 
 
 const app = express();
@@ -56,15 +56,18 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
 
-   
-    userLoginHandler(io, socket);
-
-    createUserHandler(io, socket);
-
-    userInLobbyHandler(io, socket, user as UserDocument);  
+    try {
+        userLoginHandler(io, socket);
     
-    socket.on("close", () => console.log("closed"));
+        createUserHandler(io, socket);
     
+        userInLobbyHandler(io, socket, user as UserDocument);  
+    }
+    catch (err: any) {
+        socket.emit("db_error", err);
+        console.log("General Error\n" + err);
+    }
+        
 })
 
 
@@ -72,9 +75,20 @@ io.on("connection", (socket) => {
 server.listen(port, () => console.log(`Server up on port ${port}`));
 
 
+// let stack = new Stack<number>();
 
-
-
+// stack.push(5)
+// stack.push(4)
+// stack.push(3)
+// stack.push(2)
+// stack.push(2)
+// stack.push(2)
+// stack.push(2)
+// stack.push(2)
+// stack.push(2)
+// stack.push(2)
+// stack.push(2)
+// console.log(stack.arr)
 
 // async function test() {
     

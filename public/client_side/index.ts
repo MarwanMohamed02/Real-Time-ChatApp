@@ -7,7 +7,6 @@ const socket = io({
 });
 
 
-
 // Elements
 const joinForm = document.querySelector("#join-form") as HTMLFormElement;
 const joinButton = joinForm.querySelector("button") as HTMLButtonElement;
@@ -45,7 +44,7 @@ socket.on("already_logged_in", () => {
 })
 
 
-socket.on("db_error", () => {
-    alert("An error from our side, Reloading...");
+socket.on("db_error", (message) => {
+    alert("An error from our side, Reloading...\n" + message);
     window.location.reload();
 })

@@ -35,7 +35,7 @@ export async function messagesHandler(io: Server, socket: Socket, room: RoomDocu
         io.emit("showActiveRooms", await Room.getActiveRooms());
 
         io.to(room.name).emit("message", message);
-        ack("Message sent!");
+        
     })
 
 

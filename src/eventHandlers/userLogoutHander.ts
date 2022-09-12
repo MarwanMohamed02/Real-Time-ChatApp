@@ -14,7 +14,7 @@ export function userLogoutHandler(io: Server, socket: Socket) {
             }
         }
         catch (err: any) {
-            socket.emit("db_error");
-        }
+            socket.emit("db_error", err);
+            console.log("Logout room err: \n" + err);        }
     })
 }
